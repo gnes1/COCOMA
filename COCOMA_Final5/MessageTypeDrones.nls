@@ -1,0 +1,121 @@
+to receptionMessageDrones
+  if length(boiteAlettre ) > 0
+  [
+let m first(boiteALettre)
+  set boiteAlettre but-first(boiteALettre)
+
+  let typeMessage item 0 m
+  if typeMessage = 0
+  [ print "Accuser de reception" ]
+  if typeMessage = 1
+  [ print "Message"
+    
+       if item 1 m = "Je suis mort"
+     [
+      if leader = item 3 m 
+      [
+        set leader? false
+        set leader -1 
+        set leaderVivant? false
+        ]
+      
+     ]
+       if item 1 m = "Ennemis En vus"
+     [
+       AddObjectif  item 1 m  true 
+       AddChemins  item 1 m  item 3 m 
+     ]
+    
+    
+    if item 1 m = "Besoin de ressources"
+    [
+      AgentDansCercleV2 xcor ycor zcor "Drone" true
+      let path PlusCoursCheminFinal  ListeAdj xcor ycor zcor item 0 item 3 m item 1 item 3 m item 2 item 3 m
+      suivrePath path 0.001
+    ]
+;    if item 1 m = "J'attaque le convoi"
+;     [
+;       
+;     ]
+;     
+;    
+;    if item 1 m = "Ennemis detecte"
+;    [
+;       
+;     
+;     let x CalculDistanceMinList item 3 m  "Ennemis"
+;     let pred parcoursEnLargeur listeAdj xcor ycor zcor
+;     let listee plusCourtChemin item 0 x item 1 x item 2 x pred
+;     SuivrePath listee 0.01
+;      
+;    ]
+;     
+;    if item 1 m = "Qui est le leader"
+;    [
+;      let lea ChoixLeaderPlusProche listeConvoiAPorteePerception
+;      
+;    ]
+;     
+;  if item 1 m = "Drone voici mon chemin"
+;    ["e
+;      SuivrePath item 3 m 0.01
+;      
+;    ]
+;    
+;   if item 1 m =  "On se retrouve ou?"
+;    [
+;      envoyerMessage 1 "Drone voici mon chemin" item 3 m PointDeRalliement 
+;    ]  
+;     
+;     if item 1 m =  "J'arrive avec les données "
+;    [
+;      SuivrePath item 3 m 0.01 
+;    ] 
+;    
+;     if item 1 m =  "J'ai besoin de qu'un drone me cherche mes besoins"
+;    [
+;        ;;;
+;    ] 
+;    
+    if aPorteeCommunication item 2 m  ; expéditeur
+    [ envoyerMessage 0 item 1 m  item 4 m "" false ]
+  ]
+  ]
+  end
+
+
+
+
+
+
+
+
+to envoieMessageDetectionEnnemis  [destinataire message]
+   envoyerMessage 1 "Ennemis detecte" destinataire message false
+end
+
+
+to envoieMessageQuiSontLesLeaders  [destinataire message]
+   envoyerMessage 1 "Qui est le leader" destinataire message true
+end
+
+
+to envoieMessageRecupereChemins [destinataire ]
+   envoyerMessage 1 "Leader peut tu me donner ton chemin?" destinataire nomAgent true
+end
+
+to EnvoyerMessagePointDeRalliementDrone [ destinataire message]
+  envoyerMessage 1 "Point de ralliement Drone" destinataire message false
+end
+
+to EnvoyerMessageArrive [ destinataire ]
+  envoyerMessage 1 "J'arrive avec les besoins " destinataire [] true
+end
+
+to EnvoyerMessageBesoin [ destinataire message ]
+  envoyerMessage 1 "J'ai besoin qu'un drone me cherche mes besoins " destinataire message false
+end
+
+to envoieMessageDemandeRenfort [destinataire message]
+  envoyerMessage 1 "Demande renfort" destinataire message true
+end

@@ -1,0 +1,541 @@
+;; Permet de montée ou de descendre en fonction de la valeur de dist exprimer en différence de case
+to deplacementVertical [ dist speedy ]
+    let j 0
+    while [ j  < 90 ]
+    [
+     wait speedy
+     ifelse dist > 0
+     [
+       set zcor zcor + 1 / 90
+     ]
+     [
+       if round zcor > 1 [
+       set zcor zcor - 1 / 90
+     ]
+     ]
+     set j j + 1 
+    ]
+end
+
+to changePatchAnimVolant [ x y z x1 y1 z1 speedy]
+  let diffPosX x - x1 
+  let diffPosY y - y1
+  let diffPosZ abs(z - z1)
+  
+  if z > z1
+  [
+    set diffPosZ  -1 * diffPosZ
+  ]
+  
+   ifelse diffPosX != 0 or diffPosY != 0
+   [
+     ; (-1, -1)
+     if diffPosX = -1 and diffPosY = -1
+     [
+       changePatchAnim_1_1Volant x y diffPosZ speedy
+     ]
+     
+     ; (-1, 0)
+     if diffPosX = -1 and diffPosY = 0
+     [
+       changePatchAnim_10Volant x y diffPosZ speedy
+     ]
+
+     ; (-1, 1)
+     if diffPosX = -1 and diffPosY = 1
+     [
+       changePatchAnim_11Volant x y diffPosZ speedy
+     ]
+     
+     ; (0, -1)
+     if diffPosX = 0 and diffPosY = -1
+     [
+       changePatchAnim0_1Volant x y diffPosZ speedy
+     ]
+     
+     ; (0, 1)
+     if diffPosX = 0 and diffPosY = 1
+     [
+       changePatchAnim01Volant x y diffPosZ speedy
+     ]
+     
+     ; (1, -1)
+     if diffPosX = 1 and diffPosY = -1
+     [
+       changePatchAnim1_1Volant x y diffPosZ speedy
+     ]
+
+     ; (1, 0)
+     if diffPosX = 1 and diffPosY = 0
+     [
+       changePatchAnim10Volant x y diffPosZ speedy
+     ]
+
+     ; (1, 1)
+     if diffPosX = 1 and diffPosY = 1
+     [
+       changePatchAnim11Volant x y diffPosZ speedy
+       
+     ]
+     
+     reajustePosition  speedy 
+  
+     reajusteHeading
+     set xcor round xcor
+     set ycor round ycor
+     set zcor round zcor
+   ]
+   [
+    
+      deplacementVertical diffPosZ speedy 
+     
+     
+    
+      reajustePosition  speedy 
+  
+      reajusteHeading
+      set xcor round xcor
+      set ycor round ycor
+      set zcor round zcor
+     
+   ]
+end
+
+
+;;Gérer tous les differents possibles patch 
+to changePatchAnim11Volant [ x y z speedy ] 
+  ;print "(1, 1)"
+  let diffangle angleRotationPatch heading 1 1
+  let head heading
+
+  
+  if head = 135
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneRight 90 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 180
+  [
+   if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneRight 45 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 225
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ] 
+    avancer 125 speedy 
+  ]
+  
+  if head = 270
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneLeft 45 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 315
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneLeft 90 speedy 
+    avancer 125 speedy 
+  ]
+end
+
+to changePatchAnim10Volant [ x y z speedy ] ; ok
+  ; print "(1, 0)"
+  let diffangle angleRotationPatch heading 1 0
+  let head heading
+  
+  if head = 0
+  [
+   if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneLeft 90 speedy 
+    avancer 90 speedy 
+  ]
+   
+  if head = 180 ;;;;;;;;
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneRight 90 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 225
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneRight 45 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 270
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    avancer 90 speedy 
+  ]
+  
+  if head = 315
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ] 
+    tourneLeft 45 speedy 
+    avancer 90 speedy 
+  ]
+end
+
+to changePatchAnim1_1Volant [ x y z speedy ] ; ok
+ ; print "(1, -1)"
+  let diffangle angleRotationPatch heading 1 -1
+  let head heading
+  
+  if head = 0
+  [
+   if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneLeft 45 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 45
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneLeft 90 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 225
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneRight 90 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 270
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneRight 45 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 315
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    avancer 125 speedy 
+  ]
+end
+
+to changePatchAnim01Volant [ x y z speedy ] ; ok
+  let diffangle angleRotationPatch heading 0 1
+  let head heading
+  
+  if head = 90
+  [
+   if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneRight 90 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 135
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneRight 45 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 180
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    avancer 90 speedy 
+  ]
+  
+  if head = 225
+  [
+   if z != 0
+    [
+      deplacementVertical  z speedy
+    ] 
+    tourneLeft 45 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 270
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneLeft 90 speedy 
+    avancer 90 speedy 
+  ]
+  
+end
+
+to changePatchAnim0_1Volant [ x y z speedy ] ;ok
+ ; print "(0, -1)"
+  let diffangle angleRotationPatch heading 0 -1
+  let head heading
+  
+  if head = 0
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneRight 0 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 45
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneLeft 45 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 90
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneLeft 90 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 270
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ] 
+    tourneRight 90 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 315
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneRight 45 speedy 
+    avancer 90 speedy 
+  ]
+end
+
+to changePatchAnim_10Volant [ x y z speedy ] ; ok
+  let diffangle angleRotationPatch heading 1 0
+  let head heading
+  
+  if head = 0
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneRight 90 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 45
+  [
+   if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneLeft 45 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 90
+  [
+    deplacementVertical z speedy 
+    ;tourneLeft 90 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 135
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneLeft 45 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 180
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneLeft 90 speedy 
+    avancer 90 speedy 
+  ]
+end
+
+to changePatchAnim_1_1Volant [ x y z speedy ] ; ok
+  let diffangle angleRotationPatch heading -1 -1
+  let head heading
+
+  if head = 0
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneRight 45 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 45
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    avancer 125 speedy 
+  ]
+  
+  if head = 90
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneLeft 45 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 135
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneLeft 90 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 315
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneRight 90 speedy 
+    avancer 125 speedy 
+  ]
+end
+
+to changePatchAnim_11Volant [ x y z speedy ]
+  let diffangle angleRotationPatch heading -1 1
+  let head heading
+  
+  if head = 45
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneRight 90 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 90
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneRight 45 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 135
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    avancer 125 speedy 
+  ]
+  
+  if head = 180
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneLeft 45 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 225
+  [
+    if z != 0
+    [
+      deplacementVertical  z speedy
+    ]
+    tourneLeft 90 speedy 
+    avancer 125 speedy 
+  ]
+end

@@ -1,0 +1,159 @@
+;;;Main Convoi 
+
+
+
+to MainGlobale
+  set NbIterationActuel 0
+  set Simulation true
+  while [ Simulation ]
+  [
+    
+    ask-concurrent turtles 
+    [
+      if breed = convois
+      [
+        MainConvoiGlobale
+      ]
+      if breed = ennemis
+      [
+        MainEnnemiGlobale
+      ]
+    
+      if breed = drones
+      [
+        MainDroneGlobale
+      ]  
+    ]
+    set NbIterationActuel NbIterationActuel + 1 
+    FinSimulation
+  ]
+end
+
+to MainConvoiGlobale
+  ifelse indiceItem xcor ycor zcor listeAdj != -1
+  [
+    AgentDansCercleV2 xcor ycor zcor "Convoi" false 
+  ]
+  [
+    print "-1"
+    AgentDansCercleV2 xcor ycor zcor "Convoi" true 
+  ]
+    let liste MainConvoi
+    set liste item 2 liste
+    if length(liste) != 0
+    [
+      let choix procedureChoix reduitListeTuple liste
+      let action NomDuChoix choix liste
+      print (list "convoi turtle number" who "actionchoisi" action)
+      playPlanConvoi action
+    ]
+    
+end
+
+
+to MainEnnemiGlobale
+    ifelse indiceItem xcor ycor zcor listeAdj != -1
+  [
+    AgentDansCercleV2 xcor ycor zcor "Ennemi" false 
+  ]
+  [
+    AgentDansCercleV2 xcor ycor zcor "Ennemi" true 
+  ]
+    let liste MainEnnemi
+    
+    set liste item 2 liste
+    if length(liste) != 0
+    [
+      let choix procedureChoix reduitListeTuple liste
+      
+     
+      let action NomDuChoix choix liste
+      print (list "ennemi turtle number" who "actionchoisi" action)
+      ;playPlanEnnemi action
+      
+    ]
+end
+
+to MainDroneGlobale
+  if LeSuiveur = -1 [
+    set LeSuiveur who
+  ]
+  ;print (list "Jesuislesuiveur" LeSuiveur)
+     ifelse indiceItem xcor ycor zcor listeAdj != -1
+  [
+    AgentDansCercleV2 xcor ycor zcor "Drone" false 
+  ]
+  [
+    AgentDansCercleV2 xcor ycor zcor "Drone" true 
+  ]
+    let liste mainDrone
+    set liste item 2 liste
+    if length(liste) != 0
+    [
+      let choix procedureChoix reduitListeTuple  liste
+      let action NomDuChoix choix  liste
+      ;print(list "drone turtle number" who "choixaction"  action)
+      ;playPlanDrone action
+      
+    ]
+end
+
+to-report reduitListeTuple [ liste ]
+;  print liste
+  let i 0
+  let l []
+ 
+ 
+  while [ i < length(liste) ]
+  [
+    set l lput   item 1 item i  liste l
+    set i i + 1
+  ]
+  report l
+end
+
+to-report NomDuChoix [ tuple listeTuple ]
+  let i 0
+  let l []
+  while [ i < length(listeTuple) ]
+  [
+    if item 1 item i listeTuple = tuple
+    [
+     report item 0 item i listeTuple 
+    ]
+    set i i + 1
+  ]
+  
+  report "Arrete"
+end
+
+to FinSimulation 
+  
+  ifelse not member? pokecar [who] of convois
+  [
+    print "Mission Failed"
+    set Simulation false
+  ]
+  [
+    ask convoi pokecar [ 
+     ; print (list "posfinal" xcor ycor)
+      if xcor = item 0 patchObjectif and ycor = item 1 patchObjectif 
+      [
+        print "Mission Complete"
+        set Simulation false 
+      ]
+    ]
+  ]
+  
+  if length([who] of convois) = 0 
+    [
+      print "Mission Failed"
+      set Simulation false
+    ]
+   if NbIterationActuel = NbIterationSimulation
+   [
+     print "Mission Failed"
+    set simulation false
+   ]
+   
+end

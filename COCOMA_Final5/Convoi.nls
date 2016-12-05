@@ -1,0 +1,404 @@
+to-report mainConvoi
+  let liste []
+  let etatvisite -1 
+    
+  ifelse  essenceActuel < ConvoiSeuilEssence 
+    [
+      set liste  Evale1Convoi
+      set etatvisite 1
+    ]
+    [
+      ifelse length(listeEnnemiAPorteePerception) > 0 
+      [
+        ;e3 
+        set liste   Evale3Convoi
+        set etatvisite 3
+      ] 
+      [
+        ;e4 
+        set liste  Evale4Convoi
+        set etatvisite 4
+      ]
+    ] 
+    report liste
+end  
+    
+    
+ to-report Evale1Convoi
+   let liste []
+   set liste lput CalculeTuplee1RavitaillementConvoi liste
+   set liste lput CalculeTuplee1AppelDetresseConvoi liste 
+   set liste lput CalculeTuplee1LireMessageConvoi liste
+   set liste lput CalculeTuplee1ArreteConvoi liste
+   set liste lput CalculeTuplee1AllezObjectifConvoi liste
+   
+   report (list who "e1tuple" liste)
+ end  
+
+ to-report Evale3Convoi
+   let liste []
+   set liste lput CalculeTuplee3EvitementConvoi liste
+   set liste lput CalculeTuplee3DispersionConvoi liste
+   set liste lput CalculeTuplee3LeurreConvoi liste
+   set liste lput CalculeTuplee3AppelDetresseConvoi liste
+   set liste lput CalculeTuplee3AllezObjectifConvoi liste
+   set liste lput CalculeTuplee3ArreteConvoi liste
+   report (list who "e3tuple"liste)
+ end  
+
+ to-report Evale4Convoi
+   let liste []
+   set liste lput CalculeTuplee4LireMessageConvoi liste
+   set liste lput CalculeTuplee4ArreteConvoi liste
+   set liste lput CalculeTuplee4AllezObjectifConvoi liste
+   report (list who "e4tuple"liste)
+ end  
+
+to-report UtiliteE1Convoi  [ action ]
+  if action = "Ravitaillement" 
+  [
+  report  UtilitéE1ConvoiRavitaillement
+  ]
+  
+  if action = "LireMessage" 
+  [
+  report   UtilitéE1ConvoiLireMessage
+  ]
+  if action = "Arrete" 
+  [
+  report   UtilitéE1ConvoiArrete
+  ]
+  if action = "AllezObjectif"
+  [
+  report   UtilitéE1ConvoiAllezObjectif
+  ]
+   if action = "AppelDetresseRessource" 
+  [
+  report  UtilitéE1ConvoiAppelDetresseRessource
+  ]
+  report 0
+end
+
+
+to-report UtilitéE1ConvoiRavitaillement  
+  if length(listeEnnemiAPorteePerception) > 0 [
+    report 8
+  ]
+  if distanceManhattan (list xcor ycor zcor) ( list 5 10 1) <=  essenceActuel [
+    report 10
+  ]
+   report 0
+end
+to-report UtilitéE1ConvoiLireMessage  
+  if length(listeEnnemiAPorteePerception) = 0 [
+    report 8
+  ]
+  report 1
+end
+
+to-report UtilitéE1ConvoiArrete  
+    if length(listeEnnemiAPorteePerception) > 0 [
+    report 0
+  ]
+    report 3
+end
+
+to-report UtilitéE1ConvoiAllezObjectif  
+   if length(listeEnnemiAPorteePerception) = 0 [
+    report 10
+  ]
+   report 8
+end
+
+to-report UtilitéE1ConvoiAppelDetresseRessource  
+  if  DetresseRessource? = false [
+   set  DetresseRessource? true 
+   report 10 
+  ]
+  report 0
+end
+
+
+to-report UtiliteE3Convoi  [ action ]
+;     set liste lput CalculeTuplee3EvitementConvoi liste
+;   set liste lput CalculeTuplee3DispersionConvoi liste
+;   set liste lput CalculeTuplee3LeurreConvoi liste
+;   set liste lput CalculeTuplee3AppelDetresseConvoi liste
+;   set liste lput CalculeTuplee3AllezObjectifConvoi liste
+;   set liste lput CalculeTuplee3ArreteConvoi liste
+
+  if action = "AppelDetresse" ; ok
+  [
+    report UtilitéE3ConvoiAppelDetresse  
+  ]
+  
+  if action = "AllezObjectif"
+  [
+   report UtilitéE3ConvoiAllezObjectif
+  ]
+  if action = "Evitement"; ok
+  [
+   report UtilitéE3ConvoiEvitement
+  ]
+  if action = "Dispersion"; ok
+  [
+  report  UtilitéE3ConvoiDispersion  
+  ]
+  if action = "Leurre" ;ok
+  [
+   report UtilitéE3ConvoiLeurre
+  ]
+ 
+  report 0
+end
+
+to-report UtilitéE3ConvoiAppelDetresse  
+if   AppelDetresse? = false [
+  set   AppelDetresse? true
+  report 10
+]
+report 0
+end
+
+to-report UtilitéE3ConvoiAllezObjectif  
+if length(listeDroneAPorteePerception) > 2 [
+  report 7
+]
+report 4
+end
+to-report UtilitéE3ConvoiEvitement
+  if length(listeDroneAPorteePerception) > 2 [
+  report 7
+] 
+report 3
+end
+to-report UtilitéE3ConvoiDispersion
+  if length(listeDroneAPorteePerception) = 0 [
+  report 7
+] 
+  report 3
+end
+to-report UtilitéE3ConvoiLeurre
+if length(listeDroneAPorteePerception) = 0 and pokecar != who [
+  report 5
+]
+report 3
+end
+
+
+to-report UtiliteE4Convoi [ action ]
+;  set liste lput CalculeTuplee4LireMessageConvoi liste
+;   set liste lput CalculeTuplee4ArreteConvoi liste
+;   set liste lput CalculeTuplee4AllezObjectifConvoi liste
+  
+  if action = "LireMessage" ; ok
+  [
+  report   UtilitéE4ConvoiLireMessage
+  ]
+  if action = "Arrete" ; ok
+  [
+  report  UtilitéE4ConvoiArrete
+  ]
+  if action = "AllezObjectif"
+  [
+  report UtilitéE4ConvoiAllezObjectif
+  ]
+
+  report 0
+end
+
+to-report UtilitéE4ConvoiLireMessage
+  if length(boiteALettre) > 10 [
+   report 10 
+  ]
+   if length(boiteALettre) > 5 [
+  report 5
+   ] 
+   report 0
+end
+to-report UtilitéE4ConvoiArrete
+  report 5
+  end
+to-report UtilitéE4ConvoiAllezObjectif
+  report 6
+end
+
+to-report CalculeTuplee1RavitaillementConvoi
+  let liste (list "Ravitaillement")
+  
+  let aux (list 0 distanceManhattan (list xcor ycor zcor) ( list 5 10 1))
+  if length(listeDroneAPorteePerception) = 0 and distanceManhattan (list xcor ycor zcor) ( list 5 10 1) <= essenceActuel
+  [
+    let auxi distanceManhattan (list xcor ycor zcor) ( list 5 10 1)
+    if auxi > ConvoiDecision
+    [
+      set auxi ConvoiDecision
+    ]
+    set aux (list UtiliteE1Convoi auxi)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee1AppelDetresseConvoi
+  let liste (list "AppelDetresse")
+  let aux (list 0 0)
+  if appelDetresseEnvoyer = false and length(listeDroneAPorteeCommunication) != 0
+  [
+    set aux (list  UtiliteE1Convoi item 0 liste 0)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee1LireMessageConvoi
+  let liste (list "LireMessage")
+  let aux (list 0 0)
+  if appelDetresseEnvoyer
+  [
+    set aux (list UtiliteE1Convoi item 0 liste  0)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee1ArreteConvoi
+  let liste (list "Arrete")
+  let seuil 10
+  let aux (list 0 0)
+  if essenceActuel < seuil and length(listeEnnemiAPorteePerception) != 0
+  [
+    set aux (list UtiliteE1Convoi item 0 liste  0)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee1AllezObjectifConvoi
+  let liste (list "AllezObjectif")
+  let seuil 10
+  let aux (list 0 distanceManhattan (list xcor ycor zcor) patchObjectif)
+  if essenceActuel >= seuil
+  [
+    let auxi distanceManhattan (list xcor ycor zcor) patchObjectif
+    if auxi > ConvoiDecision
+    [
+      set auxi ConvoiDecision
+    ]
+   set aux (list UtiliteE1Convoi item 0 liste  auxi)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee3EvitementConvoi ;ressource choisit de manière arbitraire
+  let liste (list "Evitement")
+  let aux (list 0 10)
+  if length(listeEnnemiAPorteePerception) != 0 and not attaquer? 
+  [
+    set aux (list UtiliteE3Convoi item 0 liste  ConvoiDecision)
+  ]
+  set liste lput aux liste
+  report liste
+end
+to-report CalculeTuplee3DispersionConvoi;ressource choisit de manière arbitraire
+  let liste (list "Dispersion")
+  let aux (list 0 0)
+  if length(listeEnnemiAPorteePerception) != 0 and  attaquer? 
+  [
+   set aux (list UtiliteE3Convoi item 0 liste  ConvoiDecision) 
+  ]
+  set liste lput aux liste
+  report liste
+end
+to-report CalculeTuplee3LeurreConvoi;ressource choisit de manière arbitraire
+  let liste (list "Leurre")
+  let aux (list UtiliteE3Convoi item 0 liste  ConvoiDecision)
+  set liste lput aux liste
+  report liste
+end
+to-report CalculeTuplee3AppelDetresseConvoi
+  let liste (list "AppelDetresse")
+  let aux (list 0 0)
+  if length(listeEnnemiAPorteePerception) != 0 and  attaquer? or attaquer?
+  [
+    set aux (list UtiliteE3Convoi item 0 liste 0)
+  ]
+  set liste lput aux liste
+  report liste
+end
+to-report CalculeTuplee3AllezObjectifConvoi
+  let liste (list "AllezObjectif")
+  let seuil 10
+  let aux (list 0 distanceManhattan (list xcor ycor zcor) patchObjectif)
+   if essenceActuel >= seuil
+  [
+    let auxi distanceManhattan (list xcor ycor zcor) patchObjectif
+    if auxi > ConvoiDecision
+    [
+      set auxi ConvoiDecision
+    ]
+   set aux (list UtiliteE3Convoi item 0 liste  auxi)
+  ]
+  set liste lput aux liste
+  report liste
+end
+to-report CalculeTuplee3ArreteConvoi
+  let liste (list "Arrete")
+  let seuil 0
+  let aux (list 0 0)
+  if essenceActuel < seuil and length(listeEnnemiAPorteePerception) != 0
+  [
+    set aux (list UtiliteE3Convoi item 0 liste  0)
+  ]
+  set liste lput aux liste
+  report liste
+end
+to-report CalculeTuplee4LireMessageConvoi
+  let liste (list "LireMessage")
+  let aux (list 0 0)
+  if random 1 = 0
+  [
+    set aux (list UtiliteE4Convoi item 0 liste  0)
+  ]
+  set liste lput aux liste
+  report liste
+end
+to-report CalculeTuplee4ArreteConvoi
+  let liste (list "Arrete")
+  let seuil 0
+  let aux (list 0 0)
+  if essenceActuel < seuil and length(listeEnnemiAPorteePerception) != 0
+  [
+    set aux (list UtiliteE4Convoi item 0 liste  0)
+  ]
+  set liste lput aux liste
+  report liste
+end
+to-report CalculeTuplee4AllezObjectifConvoi
+  let liste (list "AllezObjectif")
+  let seuil 0
+  let aux (list random 10 distanceManhattan (list xcor ycor zcor) patchObjectif)
+   if random 1 = 0
+  [
+     let auxi distanceManhattan (list xcor ycor zcor) patchObjectif
+    if auxi > ConvoiDecision
+    [
+      set auxi ConvoiDecision
+    ]
+   set aux (list UtiliteE4Convoi item 0 liste  auxi)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee3AppelDetresseRessourceConvoi
+  let liste (list "AppelDetresseRessource")
+  let aux (list 0 0)
+  if length(listeDroneAPorteeCommunication) != 0 
+  [
+    set aux (list UtiliteE1Convoi item 0 liste 0)
+  ]
+  set liste lput aux liste
+  report liste
+end

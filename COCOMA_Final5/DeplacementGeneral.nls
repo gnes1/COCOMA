@@ -1,0 +1,425 @@
+to-report PathAleatoire [posInitX posInitY posInitZ longueur volant?] 
+  let liste []
+  let i 0
+  while [ i < longueur ]
+  [
+   ; Recuperation du patch 
+   let prochain []
+   ifelse i = 0
+   [
+     set prochain (list posInitX posInitY posInitZ)
+   ]
+   [
+     set prochain last liste
+   ]
+    
+   ; Recuperation des voisins
+   let listeVoisin []
+   ifelse volant?
+   [
+     ask patch item 0 prochain item 1 prochain item 2 prochain  [ ask neighbors [ set listeVoisin lput (list pxcor pycor pzcor ) listeVoisin  ] ]
+   ]
+   [
+     ask patch item 0 prochain item 1 prochain item 2 prochain  [ ask neighbors4 [ set listeVoisin lput (list pxcor pycor pzcor ) listeVoisin  ] ]
+   ]
+   
+   ; Gestion des obstacles
+   let listeVoisinSansObtacle []
+   let j 0
+  
+   while [ j < length(listeVoisin) ]
+   [
+     let coul true
+     ask patch item 0 item j listeVoisin item 1 item j listeVoisin item 2 item j listeVoisin [
+     if pcolor > 31  and pcolor <= 39 and pcolor != 35 [set coul false ]
+     ]
+     if coul [
+      let env environnementPatch item 0 item j listeVoisin item 1 item j listeVoisin
+      if env != "Montagne" and env != "Eau" 
+      [
+       set  listeVoisinSansObtacle lput item j listeVoisin listeVoisinSansObtacle
+      ]
+     ]
+     set j j + 1
+   ] 
+   
+   ; Gestion du no-swap
+   let listeVoisinNoSwap []
+   set j 0
+   while [ j < length(listeVoisinSansObtacle) ]
+   [
+     if voisinDirect3D item 0 prochain item 1 prochain item 2 prochain item 0 item j listeVoisinSansObtacle item 1 item j listeVoisinSansObtacle item 2 item j listeVoisinSansObtacle 
+     [
+      set  listeVoisinNoSwap lput item j listeVoisinSansObtacle listeVoisinNoSwap
+     ]
+     set j j + 1
+   ]
+   
+   ; Ajout dans la liste 
+   ifelse length(listeVoisinNoSwap) <= 0
+   [
+     set liste lput prochain liste
+   ]
+   [
+     set liste lput item random length(listeVoisinNoSwap) listeVoisinNoSwap liste
+   ]
+    set i i + 1
+  ]
+  report liste
+end
+
+;;;Suivre un path 
+to suivrePath [ path speedy ]
+  let nombrePas 0
+  set speedy 0.01
+  if breed = convois
+    [
+      set nombrePas ConvoiDecision
+    ]
+  if breed = ennemis
+    [
+      set nombrePas EnnemiDecision
+    ]
+      
+  if breed = drones
+    [
+      set nombrePas DroneDecision
+    ]  
+  let i 0
+  while [ i < length(path) and i < nombrePas]
+  [
+    let ok true
+    if breed = convois and breed = ennemis
+    [
+      ask patch item 0 item i path round item 1 item i path 0
+      [
+        if pcolor > 101 and pcolor <= 109 [ set ok false ]
+        if pcolor > 31  and pcolor <= 39 and pcolor != 35 [ set ok false ]
+      ]
+    ]
+    if breed = drones
+    [
+      ask patch item 0 item i path round item 1 item i path  round item 2 item i path
+      [
+        if pcolor > 31  and pcolor <= 39 and pcolor != 35 [ set ok false ]
+      ]
+    ]
+    
+    if essenceActuel > 0 and ok
+    [
+      let aux patch-here
+      if breed = Convois or breed = Ennemis [
+      changePatchAnim round [pxcor] of aux round [pycor] of aux round [pzcor] of aux round item 0 item i path round item 1 item i path speedy
+      ]
+      if breed = Drones [
+      changePatchAnimVolant round [pxcor] of aux round [pycor] of aux round [pzcor] of aux round item 0 item i path round item 1 item i path round item 2 item i path speedy
+      ]
+      set essenceActuel essenceActuel - 1
+      
+    ]
+    set i i + 1 
+  ]
+end
+
+;Pas tester
+to-report PathAleatoireLimitee [posInitX posInitY posInitZ longueur taille volant?] 
+  let liste []
+  let PerceptionLimit cerclePerception posInitX posInitY posInitZ taille
+  let i 0
+  while [ i < longueur ]
+  [
+   ; Recuperation du patch 
+   let prochain []
+   ifelse i = 0
+   [
+     set prochain (list posInitX posInitY posInitZ)
+   ]
+   [
+     set prochain last liste
+   ]
+    
+   ; Recuperation des voisins
+   let listeVoisin []
+   ifelse volant?
+   [
+     ask patch item 0 prochain item 1 prochain item 2 prochain  [ ask neighbors [ set listeVoisin lput (list pxcor pycor pzcor ) listeVoisin  ] ]
+   ]
+   [
+     ask patch item 0 prochain item 1 prochain item 2 prochain  [ ask neighbors4 [ set listeVoisin lput (list pxcor pycor pzcor ) listeVoisin  ] ]
+   ]
+   
+   let listeVoisinLimite []
+   let j 0
+   while [ j < length(listeVoisin)]
+   [
+    if member? item j listeVoisin PerceptionLimit and item 2 item j listeVoisin > 0
+    [
+     set listeVoisinLimite lput item j listeVoisin listeVoisinLimite
+    ]
+    set j j + 1 
+   ]
+   ; Gestion des obstacles
+   let listeVoisinSansObtacle []
+   set j 0
+   while [ j < length(listeVoisinLimite) ]
+   [
+     let coul true
+     ask patch item 0 item j listeVoisin item 1 item j listeVoisin item 2 item j listeVoisin [
+     if pcolor > 31  and pcolor <= 39 and pcolor != 35 [set coul false ]
+     ]
+     if coul [
+      let env environnementPatch item 0 item j listeVoisinLimite item 1 item j listeVoisinLimite
+      if env != "Montagne" and env != "Eau"
+      [
+       set  listeVoisinSansObtacle lput item j listeVoisinLimite listeVoisinSansObtacle
+      ]
+     ]
+     set j j + 1
+   ] 
+   
+   ; Gestion du no-swap
+   let listeVoisinNoSwap []
+   set j 0
+   while [ j < length(listeVoisinSansObtacle) ]
+   [
+     if voisinDirect3D item 0 prochain item 1 prochain item 2 prochain item 0 item j listeVoisinSansObtacle item 1 item j listeVoisinSansObtacle item 2 item j listeVoisinSansObtacle 
+     [
+      set  listeVoisinNoSwap lput item j listeVoisinSansObtacle listeVoisinNoSwap
+     ]
+     set j j + 1
+   ]
+   
+   ; Ajout dans la liste 
+   ifelse length(listeVoisinNoSwap) <= 0
+   [
+     set liste lput prochain liste
+   ]
+   [
+     set liste lput item random length(listeVoisinNoSwap) listeVoisinNoSwap liste
+   ]
+    set i i + 1
+  ]
+  report liste
+end
+
+;;;;;;;;;;;;;;;;;; Aleatoire Super limité Tu choisis un carre et tu vas y aller alatoireement a ce point sur des patchs du carré
+;; Pas tester et Avancer continuelle à rajouter
+to-report PathAleatoireSuperLimitee [posInitX posInitY posInitZ posFinalX posFinalY posFinalZ longueur volant?] 
+  let liste []
+  let PerceptionLimit parallepideRectangle posInitX posInitY posInitZ posFinalX posFinalY posFinalZ
+  
+  let i 0
+  while [ i < longueur ]
+  [
+   ; Recuperation du patch 
+   let prochain []
+   ifelse i = 0
+   [
+     set prochain (list posInitX posInitY posInitZ)
+   ]
+   [
+     set prochain last liste
+   ]
+    
+   ; Recuperation des voisins
+   let listeVoisin []
+   ifelse volant?
+   [
+     ask patch item 0 prochain item 1 prochain item 2 prochain  [ ask neighbors [ set listeVoisin lput (list pxcor pycor pzcor ) listeVoisin  ] ]
+   ]
+   [
+     ask patch item 0 prochain item 1 prochain item 2 prochain  [ ask neighbors4 [ set listeVoisin lput (list pxcor pycor pzcor ) listeVoisin  ] ]
+   ]
+   
+   let listeVoisinLimite []
+   let j 0
+   while [ j < length(listeVoisin)]
+   [
+    if member? item j listeVoisin PerceptionLimit
+    [
+     set listeVoisinLimite lput item j listeVoisin listeVoisinLimite
+    ]
+    set j j + 1 
+   ]
+   ; Gestion des obstacles
+   let listeVoisinSansObtacle []
+   set j 0
+   while [ j < length(listeVoisinLimite) ]
+   [
+      let env environnementPatch item 0 item j listeVoisinLimite item 1 item j listeVoisinLimite
+      if env != "Montagne" and env != "Eau"
+      [
+       set  listeVoisinSansObtacle lput item j listeVoisinLimite listeVoisinSansObtacle
+      ]
+     set j j + 1
+   ] 
+   
+   ; Gestion du no-swap
+   let listeVoisinNoSwap []
+   set j 0
+   while [ j < length(listeVoisinSansObtacle) ]
+   [
+     if voisinDirect3D item 0 prochain item 1 prochain item 2 prochain item 0 item j listeVoisinSansObtacle item 1 item j listeVoisinSansObtacle item 2 item j listeVoisinSansObtacle 
+     [
+      set  listeVoisinNoSwap lput item j listeVoisinSansObtacle listeVoisinNoSwap
+     ]
+     set j j + 1
+   ]
+   
+   ; Ajout dans la liste 
+   ifelse length(listeVoisinNoSwap) <= 0
+   [
+     set liste lput prochain liste
+   ]
+   [
+     set liste lput item random length(listeVoisinNoSwap) listeVoisinNoSwap liste
+   ]
+    set i i + 1
+  ]
+  report liste
+end
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;Choisir le chemin selon le dijckstra et un specific angle
+to-report   NouveauListAdj [angle]
+  let newAngle heading
+  let saveHeading heading
+  
+   if angle > 0 and angle < 45
+  [
+   set angle 0
+  ]
+  
+   if angle > 45 and angle < 90
+  [
+   set angle 45 
+  ]
+  
+  if angle > 90 and angle < 135
+  [
+   set angle 90 
+  ]
+  
+  if angle > 135 and angle < 180
+  [
+   set angle 135 
+  ]
+  
+  if angle > 180 and angle < 225
+  [
+   set angle 180 
+  ]
+  
+  if angle > 225 and angle < 270
+  [
+   set angle 225 
+  ]
+  
+  if angle > 270 and angle < 315
+  [
+   set angle 270 
+  ]
+  
+  if angle > 315 and angle < 360
+  [
+   set angle 315 
+  ]
+ 
+  set newAngle newAngle + angle
+  set heading newAngle
+  ;print newAngle
+  ;print heading
+   let difx ([pxcor] of patch-ahead 1   - xcor) 
+   let dify ([pycor] of patch-ahead 1   - ycor) 
+   let difz ([pzcor] of patch-ahead 1   - zcor) 
+    let liste (list (list[pxcor] of patch-ahead 1 [pycor] of patch-ahead 1 [pzcor] of patch-ahead 1 ))
+   ;print (list (list difx dify difz))
+   let i 0
+   let taille 5
+   let osx xcor + difx
+   let osy ycor + dify
+   let osz zcor + difz
+   while [ i < taille ]
+   [
+     set osx osx + difx
+     set osy osy + dify
+     set osz osz + difz
+     set liste lput (list osx osy osz ) liste
+     set i i + 1
+   ]
+   ;print (list "listeangle" liste)
+   set heading saveHeading
+  report liste
+end
+
+;;;Calcul l'element le plus pret de toi 
+to-report CalculDistanceMinList [ listEnnemi TypeList]
+    
+  let i 0
+  let liste []
+  let enn -1
+  let disini 300
+  while [ i < length(listEnnemi) ] 
+  [
+    let  dis abs (([xcor] of turtle i  - xcor) + abs ([ycor] of turtle i - ycor) + abs ([zcor] of turtle i - zcor))
+   if dis < disini [
+    set disini dis
+     set enn item i listEnnemi
+    ]
+      set i i + 1
+  ]
+  report enn
+end
+
+
+
+
+to-report transformListePatchListeCoord [ liste ]
+  let newListe []
+  let i 0 
+  let x -1
+  let y -1
+  let z -1
+  while [ i < length(liste) ]
+  [
+    ask item i liste [ set x pxcor
+                       set y pycor 
+                       set z 1 ]
+    set newListe lput (list x y z ) newListe
+    set i i + 1
+  ]
+  report newListe
+end
+
+to-report raccourciAstarPath
+  ; Mes perceptions
+  let percep []
+  if breed = convois
+  [
+    set percep cerclePerception3DS xcor ycor zcor max (list ConvoiDistanceObservable ConvoiDistanceCommunication) true
+  ]
+  if breed = drones
+  [
+   set percep cerclePerception3DS xcor ycor zcor max (list  DroneDistanceObservable DroneDistanceCommunication DronePorteeDeTir) true
+  ]
+  
+  ; Patch du A* présent dans les perceptions
+  let pos []
+  let i 0
+  while [i < length(as-path) ]
+  [
+    if member? item i as-path percep
+    [
+      set pos lput item i as-path  pos
+    ]
+    set i i + 1
+  ]
+  set pos reverse pos
+  if length(pos) > 0
+  [
+    report PlusCoursCheminFinal  ListeAdj xcor ycor zcor item 0 item 0 pos item 1 item 0 pos item 2 item 0 pos 
+  ]
+  report PlusCoursCheminFinal  ListeAdj xcor ycor zcor item 0 patchObjectif item 1 patchObjectif item 2 patchObjectif 
+end
+
+
+

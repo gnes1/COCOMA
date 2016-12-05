@@ -1,0 +1,265 @@
+to LireMessage [ n ]
+  repeat n
+  [
+    receptionMessage
+  ]
+end
+
+to AppelDetresseRessource 
+  envoieMessageDetresseRessource  listeDroneAPorteeCommunication (list xcor ycor zcor)
+end
+
+to Sarreter [ temps ]
+  wait temps
+end
+
+to Attaquer [ head pitching porteeBullet ]
+  ; "jattaque"
+  CreerRequete xcor ycor zcor head pitching porteeBullet
+end
+  
+
+to Evitement
+   let patchchoisi patchobjectif
+  if  length(listeEnnemiAPorteePerception) > 0
+  [
+   ; print "On est la "
+     let listePatch []
+     let i 0
+     while [ i < length(listeEnnemiAPorteePerception) ]
+     [
+      ask ennemi item i listeEnnemiAPorteePerception [ set listePatch sentence cerclePerception  xcor ycor zcor 2 listePatch ]
+      set i i + 1 
+     ]
+    let plusCoursCheminReduit1 plusCoursCheminReduit listeAdj listePatch
+    let listeaspath as-path
+    
+    set i 0
+    let indice ConvoiDecision
+    if length(listeaspath) < ConvoiDecision
+    [
+     set indice length(listeaspath) 
+    ]
+    
+    set patchchoisi item indice listeaspath
+    
+   ; print patchchoisi
+    
+    
+    let liste PlusCoursCheminFinal plusCoursCheminReduit1 xcor ycor zcor  item 0 patchchoisi item 1 patchchoisi item 2 patchchoisi
+  ;  print liste 
+    suivrepath liste 0.001
+  ]
+end
+
+
+
+to Suivre [ Id TypeAgentSuivi]
+  print listeConvoiAPorteePerception
+  let chemin as-path
+  let liste []
+  let taillePerc -1
+  ifelse TypeAgentSuivi = "Convoi"
+  [
+     set liste listeConvoiAPorteePerception
+     set taillePerc ConvoiDistanceObservable
+  ]
+  [
+    ifelse TypeAgentSuivi = "Ennemi"
+    [
+      set liste listeEnnemiAPorteePerception
+      set taillePerc EnnemiDistanceObservable
+    ]
+    [
+     set liste  listeDroneAPorteePerception 
+     set taillePerc DroneDistanceObservable
+    ]
+  ]
+  ifelse member? Id liste
+  [
+    let pos -1
+    ask turtle Id [ set pos (list round xcor round ycor round zcor) ]
+    set pos PatchPlusProcheLeader pos taillePerc
+    ;print (list "pos" who pos)
+    ifelse length(pos) > 0[
+    set liste PlusCoursCheminFinal listeAdj xcor ycor zcor item 0 pos item 1 pos item 2 pos
+    set zcor round zcor
+    ;print (list "voici le chemin" who liste)
+    suivrepath liste 0.001
+    ]
+    [
+      ;print (list "cas2Suivre" who )
+    ifelse member? (list round xcor round ycor round zcor) chemin [
+      ;print (list "mapositiofaitpartieduastar" (list xcor ycor zcor))
+      let indice 0
+    let z 0
+    let cheminFinale []
+    while [ z < length(chemin) ]
+    [
+      if (list round xcor round ycor round zcor) = item z chemin [
+        set indice z
+      ]
+      set z z + 1
+    ]
+    set z indice
+    while [ z < length(chemin) ]
+    [
+      set cheminFinale lput item z chemin cheminFinale
+      set z z + 1
+    ]
+    suivrepath cheminFinale 0.001
+    ]
+     [
+    ;print "jesuisloinduastar"
+   let patcheproche PatchPlusProcheLeaderListe chemin taillePerc
+   ;print (list "plucproche" who patcheproche)
+   set liste PlusCoursCheminFinal listeAdj round xcor round ycor round zcor round item 0 patcheproche round item 1 patcheproche item 2 patcheproche
+    set zcor round zcor
+    suivrepath liste 0.0010
+  
+     ]
+      
+      
+    ]
+  ]
+    [
+      ;print (list "cas2Suivre" who )
+    ifelse member? (list round xcor round ycor round zcor) chemin [
+      ;print (list "mapositiofaitpartieduastar" (list xcor ycor zcor))
+      let indice 0
+    let z 0
+    let cheminFinale []
+    while [ z < length(chemin) ]
+    [
+      if (list round xcor round ycor round zcor) = item z chemin [
+        set indice z
+      ]
+      set z z + 1
+    ]
+    set z indice
+    while [ z < length(chemin) ]
+    [
+      set cheminFinale lput item z chemin cheminFinale
+      set z z + 1
+    ]
+    suivrepath cheminFinale 0.001
+    ]
+     [
+    ;print "jesuisloinduastar"
+   let patcheproche PatchPlusProcheLeaderListe chemin taillePerc
+   ;print (list "plucproche" who patcheproche)
+   set liste PlusCoursCheminFinal listeAdj round xcor round ycor round zcor round item 0 patcheproche round item 1 patcheproche item 2 patcheproche
+    set zcor round zcor
+    suivrepath liste 0.0010
+  
+     ]
+    
+    
+    ]
+  
+  
+  
+end
+
+to-report PatchPlusProcheLeader [ posLead taillePerc]
+  ;print "rentre"
+;  if indiceItem item 0 posLead item 1 posLead item 2 posLead listeAdj != -1 and length(item 1 item indiceItem item 0 posLead item 1 posLead item 2 posLead listeAdj listeAdj) > 0
+;  [
+;    print "premierif"
+;   report posLead 
+;  ]
+  let distmax 10000
+  let indice -1 
+  let liste cerclePerception3DS  round xcor  round ycor  round zcor taillePerc true 
+  let liste2 []
+  let i 0 
+  while [i  < length(liste) ]
+  [
+    ;estDansPred  item 0 item i liste item 1 item i liste item 2 item i liste parcoursEnLargeur listeAdj xcor ycor zcor = true and
+    if  indiceItem item 0 item i liste item 1 item i liste item 2 item i liste listeAdj != -1 and length(item 1 item indiceItem item 0 item i liste item 1 item i liste item 2 item i liste listeAdj listeAdj) > 0
+    [
+     set liste2 lput item i liste liste2 
+    ] 
+    set i i + 1
+  ]
+ ; print (list "listeCercle" liste)
+  set i 0 
+  while [ i < length(liste2 ) ]
+  [
+    let dist abs(item 0 item i liste2 - item 0 posLead) + abs(item 1 item i liste2 - item 1 posLead)  + abs(item 2 item i liste2 - item 2 posLead) 
+   if  dist < distmax and not [obstacle?] of patch item 0 item i liste2 item 1 item i liste2 0
+   [
+     set indice i 
+     set distmax dist
+   ]
+   set i i + 1 
+  ]
+  if indice = -1 [
+    report []
+  ]
+  report item indice liste2
+  
+end
+
+to-report PatchPlusProcheLeaderListe [ liste2 taillePerc]
+  ;print "rentre"
+;  if indiceItem item 0 posLead item 1 posLead item 2 posLead listeAdj != -1 and length(item 1 item indiceItem item 0 posLead item 1 posLead item 2 posLead listeAdj listeAdj) > 0
+;  [
+;    print "premierif"
+;   report posLead 
+;  ]
+  let distmax 10000
+  let indice -1 
+  let i 0
+  while [ i < length(liste2 ) ]
+  [
+    let dist abs(item 0 item i liste2 - round xcor ) + abs(item 1 item i liste2 - round ycor)  + abs(item 2 item i liste2 - round zcor) 
+   if  dist < distmax and not [obstacle?] of patch item 0 item i liste2 item 1 item i liste2 0
+   [
+     set indice i 
+     set distmax dist
+   ]
+   set i i + 1 
+  ]
+  if indice = -1 [
+    report []
+  ]
+  report item indice liste2
+  
+end
+
+
+
+to PartageCarte [ ListeTypeAgent ]
+  if member? "Convoi" ListeTypeAgent
+  [
+    envoieMessageFusionCarte listeConvoiAPorteeCommunication
+  ]
+  
+  if member? "Ennemi" listeTypeAgent
+  [
+    envoieMessageFusionCarte listeEnnemiAPorteeCommunication
+  ]
+  
+  if member? "Drone" listeTypeAgent
+  [
+    envoieMessageFusionCarte  listeDroneAPorteeCommunication
+  ]
+end
+
+
+to playPlan [ action ]
+  if breed = convois
+  [
+    playPlanConvoi  action 
+  ]
+  if breed = ennemis
+  [
+    playPlanEnnemi  action 
+  ]
+  if breed = drones
+  [
+    playPlanDrone  action 
+  ]
+end
+  

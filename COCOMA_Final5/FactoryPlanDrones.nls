@@ -1,0 +1,614 @@
+to AvanceVersObjectifDrone [ posFinal ]
+   ifelse leader = who 
+  [
+   ; print "cas1"
+    let liste PlusCoursCheminFinal  ListeAdj round xcor round ycor round zcor round item 0 posFinal round item 1 posFinal round item 2 posFinal 
+    suivrePath liste 0.001
+  ]
+  [
+    ifelse member? leader listeDroneAPorteePerception
+    [
+   ;   print "cas2"
+      Suivre leader "Drone"
+    ]
+    [
+    ;  print "cas3"
+       AvanceVersObjectifDroneSolo posFinal 
+    ]
+  ]
+end
+
+to AvanceVersObjectifDroneSolo [ posFinal ]
+  if not leader? 
+  [
+    let liste PlusCoursCheminFinal  ListeAdj xcor ycor zcor item 0 posFinal item 1 posFinal zcor 
+    suivrePath liste 0.001
+  ]
+end
+
+
+to AppelDetresseEnnemiEnVueVersionDrone
+  envoieMessageDetectionEnnemis  listeDroneAPorteeCommunication listeEnnemiAPorteePerception
+end
+
+to RavitaillementDrone
+  let liste ListeBasePatchHangar
+  let i 0
+  let l []
+ ; print liste
+  while [ i < length(liste) ]
+  [
+    if indiceItem  item 0 item i liste item 1 item i liste 1 listeAdj = -1
+    [
+      set l lput item i liste l 
+    ]
+   set i i + 1
+  ]
+  
+  set i 0
+  while [ i < length(l) ]
+  [
+    set liste remove item i l liste 
+    set i i + 1
+  ]
+  
+  AvanceVersObjectifDroneSolo item random length(liste) liste
+  
+  set essenceActuel essenceMax
+  set munitionActuel munitionMax
+end
+
+to DroneAttaqueEnnemi
+   let x 0
+  let y 0
+  let z 0
+  let cible item random length (listeEnnemiAPorteeDeTir) listeEnnemiAPorteeDeTir
+  let pos -1
+  ask turtle cible [ set pos (list xcor ycor zcor) set x xcor set y ycor set z zcor]
+ ; print (list "cible" who cible)
+  let head DetermineHeading x y 
+  if xcor = [xcor] of turtle cible and ycor = [ycor] of turtle cible [
+   set head heading 
+  ]
+;  print (list "head" who head)
+  Attaquer head 0 10 
+end
+
+to AppelRenfortDrone
+  envoieMessageDemandeRenfort listeDroneAPorteeCommunication (list xcor ycor zcor)
+end
+
+to PatrouilleDrone
+  let i 0
+  let finwhile? false
+  while [ i < length(listeConvoiAPorteePerception) and finwhile? = false ]
+  [
+    let pos item i listeConvoiAPorteePerception
+    let point []
+    ask turtle item i listeConvoiAPorteePerception [
+      set point (list xcor ycor zcor)
+    ]
+    
+    let liste PlusCoursCheminFinal listeAdj round xcor round ycor round zcor round item 0 point round item 1 point item 2 point
+    set zcor round zcor
+    suivrepath liste 0.001
+    AgentDansCercleV2 xcor ycor zcor "Drone" false
+    if length(listeEnnemiAPorteePerception) > 0 [
+     set  finwhile? true
+    ]
+    set i i + 1 
+  ] 
+end
+
+to TransportRessourceDrone [ demandeur pos ]   
+  AvanceVersObjectifDroneSolo  pos
+  
+  let realPos -1
+  if member? demandeur listeConvoiAPorteePerception or member? demandeur listeDroneAPorteePerception
+  [
+    ask turtle demandeur [ set realPos (list xcor ycor zcor)]
+  ]
+  
+  if realPos != -1
+  [
+    AvanceVersObjectifDroneSolo  realPos
+    ask turtle demandeur [ set essenceActuel essenceMax set munitionActuel munitionMax ] ; A retoucher
+    set essenceMax 0
+    set munitionMax 0
+  ]
+end
+
+to ExplorationDrone
+  let aux random 3
+  if aux = 0
+  [
+    ExplorationZoneInexplorer
+  ]
+  if aux = 1
+  [
+    ExplorationRandom
+  ]
+  
+  if aux = 2
+  [
+    ExplorationSuivreRiviere
+  ]
+end
+
+to ExplorationZoneInexplorer
+end
+
+to ExplorationRandom
+ let liste PathAleatoire xcor ycor zcor 10 true
+ suivrePath liste 0.001
+end
+
+to ExplorationSuivreRiviere
+  SuivreRiviere 10
+end
+
+to SuivreRiviere [ taille ]
+;  let cercle cerclePerception3DS round xcor round ycor round zcor taille false
+;  print cercle
+;  let i 0
+;  let totale 0
+;  let liste []
+;  let prochain []
+;  while [ i < length(cercle) ]
+;  [
+;    if environnementPatch round item 0 item i cercle round item 1 item i cercle = "Eau"
+;    [
+;      set prochain (list round item 0 item i cercle round item 1 item i cercle round zcor)
+;      set totale totale + 1
+;      set liste lput prochain liste
+;    ]
+;    set i i + 1 
+;  ]
+;  print (list liste)
+;  if totale > 0 [
+;    set  i 0
+;    while [ i < length(liste)]
+;      [
+;        let pred parcoursEnLargeur listeAdj round xcor round ycor round zcor
+;        let listee plusCourtChemin  round item 0 item i cercle round item 1 item i cercle round zcor pred
+;        SuivrePath listee 0.01
+;        set i i + 1
+;      ]
+;    
+;    set i 0
+;    while [ i < length(cercle) ]
+;    [
+;    if environnementPatch round item 0 item i cercle round item 1 item i cercle = "Eau"
+;    [
+;      set prochain (list round item 0 item i cercle round item 1 item i cercle round zcor)
+;      set totale totale + 1
+;      set liste lput prochain liste
+;    ]
+;    set i i + 1 
+;    ]
+;  ]
+let cercle cerclePerception3DS round xcor round ycor round zcor taille false
+let i 0
+let liste []
+;print (list "cercle" cercle)
+while [ i < length(cercle) ][
+ if  environnementPatch  item 0 item i cercle  item 1 item i cercle = "Eau"
+ [
+   let element (list item 0 item i cercle item 1 item i cercle )
+   ;print (list "element" element)
+   if not member? element liste [
+     set liste lput element liste
+   ]
+ ]
+ set i i + 1
+ 
+]
+
+   let PlusCours PlusCoursCheminFinal ListeAdj round xcor round ycor round zcor round item 0 item 0 liste round item 1 item 0 liste round zcor 
+
+ SuivrePath PlusCours 0.01
+
+end
+;;Est ce que si je trouve pas de patch eau je fais random ou sa sera fait en action?
+
+to EvitementDroneEnnemi
+  let patchchoisi []
+  ;print (list "liste" listeEnnemiAPorteePerception)
+  if  length(listeEnnemiAPorteePerception) > 0
+  [
+    ; print "On est la "
+     let listePatch []
+     let i 0
+     while [ i < length(listeEnnemiAPorteePerception) ]
+     [
+      ask ennemi item i listeEnnemiAPorteePerception [ set listePatch sentence cerclePerception3DS  round xcor round ycor round zcor 2 false listePatch ]
+      set i i + 1 
+     ]
+    let plusCoursCheminReduit1 plusCoursCheminReduit listeAdj listePatch
+    let listeaspath as-path
+   ; print (list "listeaspath" listeaspath)
+    set i 0
+    let indice DroneDecision
+    if length(listeaspath) < DroneDecision
+    [
+     set indice length(listeaspath) 
+    ]
+    ;print indice
+    set patchchoisi item indice listeaspath
+    
+    ;print patchchoisi
+    
+    
+    let liste PlusCoursCheminFinal ListeAdj round xcor round ycor round zcor round item 0 patchchoisi round item 1 patchchoisi round item 2 patchchoisi 
+    ;print liste 
+    suivrepath liste 0.001
+  ]
+  
+end
+
+to SuivreConvoi
+  let Id -1
+ ; print listeConvoiAPorteePerception
+  let chemin as-path
+  let liste []
+  let taillePerc -1
+  
+     set liste listeConvoiAPorteePerception
+     if length(liste) > 0 [
+     set id random length(liste) 
+     set id item id liste
+     ]
+     set taillePerc ConvoiDistanceObservable
+  ifelse member? Id liste
+  [
+    let pos -1
+    ask turtle Id [ set pos (list round xcor round ycor round zcor) ]
+    set pos PatchPlusProcheLeader pos taillePerc
+   ; print (list "pos" who pos)
+    if length(pos) > 0 [
+    set liste PlusCoursCheminFinal listeAdj round xcor round ycor round zcor round item 0 pos round item 1 pos round item 2 pos
+    set zcor round zcor
+    ;print (list "voici le chemin" who liste)
+    suivrepath liste 0.001
+    ]
+  ]
+    [
+      ;print (list "cas2Suivre" who )
+    ifelse member? (list round xcor round ycor round zcor) chemin [
+    ;  print (list "mapositiofaitpartieduastar" (list xcor ycor zcor))
+      let indice 0
+    let z 0
+    let cheminFinale []
+    while [ z < length(chemin) ]
+    [
+      if (list round xcor round ycor round zcor) = item z chemin [
+        set indice z
+      ]
+      set z z + 1
+    ]
+    set z indice
+    while [ z < length(chemin) ]
+    [
+      set cheminFinale lput item z chemin cheminFinale
+      set z z + 1
+    ]
+  ;  print cheminFinale
+    suivrepath cheminFinale 0.001
+    ]
+     [
+   ; print "jesuisloinduastar"
+   let patcheproche PatchPlusProcheLeaderListe chemin taillePerc
+  ; print (list "plucproche" who patcheproche)
+   set liste PlusCoursCheminFinal listeAdj round xcor round ycor round zcor round item 0 patcheproche round item 1 patcheproche item 2 patcheproche
+    set zcor round zcor
+    suivrepath liste 0.0010
+  
+     ]
+    
+    
+    ]
+  
+  
+end
+
+
+to SuivreEnnemi
+  let Id -1
+  
+ 
+    if Id = -1 [
+      if length(listeEnnemiAPorteePerception) > 0 [
+   let choice random length(listeEnnemiAPorteePerception) 
+   set Id item choice listeEnnemiAPorteePerception
+    ]
+    ]
+    ;print Id
+     let liste  listeEnnemiAPorteePerception 
+     let taillePerc DroneDistanceObservable
+ 
+     if Id != -1 [
+      ; print "rentrer"
+    let pos -1
+    ask turtle Id [ set pos (list round xcor round ycor round zcor) ]
+    set pos PatchPlusProcheLeader pos taillePerc
+   ; print (list "pos" who pos)
+    set liste PlusCoursCheminFinal listeAdj round xcor round ycor round zcor round item 0 pos round item 1 pos round item 2 pos
+    set zcor round zcor
+    ; print (list "voici le chemin" who liste)
+   suivrepath liste 0.001
+  
+     ]
+end
+
+to SacrifierDrone 
+  let liste [] 
+  if length(listeEnnemiAPorteePerception) > 0 
+  [
+    let randomchoice random length(listeEnnemiAPorteePerception)
+    ask turtle item randomchoice listeEnnemiAPorteePerception [
+      let ye ycor - 1 
+      set liste (list round xcor round ye round zcor)
+    ]
+  
+  set liste PlusCoursCheminFinal ListeAdj round xcor round ycor round zcor round item 0 liste round item 1 liste round item 2 liste
+  suivrePath liste 0.001
+  ]
+end
+
+to  playPlanDrone [action]
+  
+  
+  
+  if who = LeSuiveur [
+    if action = "Sacrifier" ; ok
+  [
+    SacrifierDrone 
+  ]
+   if action = "AttaqueEnnemi"; ok
+  [
+    DroneAttaqueEnnemi
+  ]
+
+    SuivreConvoi
+  ]
+    
+  if action = "Ravitaillement" ; ok
+  [
+    RavitaillementDrone
+  ]
+  if action = "AppelDetresse" ; ok
+  [
+    AppelDetresseEnnemiEnVueVersionDrone
+  ]
+  if action = "LireMessage" ; ok
+  [
+    LireMessage 1
+  ]
+  if action = "Arrete";ok
+  [
+    Sarreter 5
+  ]
+  if action =  "AllezObjectif";ok
+  [
+    AvanceVersObjectifDrone [];Comment initialiser
+  ]
+  if action = "AttaqueEnnemi"; ok
+  [
+    DroneAttaqueEnnemi
+  ]
+  if action = "Evitement" ; ok mais il ne trouve pas le point 
+  [
+    EvitementDroneEnnemi
+  ]
+  if action = "Dispersion" ; ok
+  [
+    DispersionDrone
+  ]
+  if action = "SuivreEnnemi" ; ok
+  [
+    SuivreEnnemi
+  ]
+if action = "Sacrifier" ; ok
+  [
+    SacrifierDrone 
+  ]
+  if action = "AppelRenfort" ; ok
+  [
+    AppelRenfortDrone
+  ]
+   if action = "Patrouille" ; ok C kevin 
+  [
+    PatrouilleDrone
+  ]
+     if action =  "ExploNonExplorer" ; ok Kevin
+  [
+    ExplorationZoneInexplorer
+  ]
+    if action =  "ExploRandom" ; ok 
+  [
+    ExplorationRandom
+  ]
+      if action =  "SuivreRiviere" ; SuivreRiviere
+  [
+    ExplorationSuivreRiviere
+  ]  
+       if action =  "SuivreConvoi" ; ok
+  [
+    SuivreConvoi
+  ]
+       if action =  "TransportRessource"; ok
+  [
+    TransportRessourceDrone who (list xcor ycor zcor);;Comment on inialise!!!!
+  ]
+  
+      if action =  "AppelDetresseRessource"; ok
+  [
+    envoieMessageDetresseRessource listeDroneAPorteeCommunication (list xcor ycor zcor);;Comment on inialise!!!!
+  ]
+  
+   if action = "MiseAJourCarteSolo"
+  [
+    MiseAjourCarteSoloDrone
+  ]
+end
+
+
+
+
+
+
+
+;to DispersionDrone ;ok
+;  ifelse leader?
+;   [
+;     
+;     DispersionGroupDrone CreerPointRalliement
+;   ]
+;   [
+;     DispersionSoloDrone
+;   ]
+;  
+;end
+;
+;to  InitialisationDispersionGroup
+;   ifelse Leader = who
+;  [
+;    
+;    ;;Envoyer un message aux suiveurs du point de ralliement
+;      set PointDeRalliement CreerPointRalliement 
+;      AgentDansCercle xcor ycor zcor "Drone" 
+;      ;envoieMessagePointRalliement listeConvoiAPorteePerception
+;    
+;  ]
+;  [   
+;     set PointDeRalliement (list round xcor round ycor round zcor)
+;  ]
+;  
+;end
+;
+;to  ChoixPartenaireGroup
+;  AgentDansCercle xcor ycor zcor "Convoi"
+;  let liste  ListeAgentPlusProcheDuLeader listeDroneAPorteePerception
+;
+;envoieMessageConfirmation liste who
+;end
+;
+;
+;
+;to DispersionGroupDrone [posNewObj]
+;  InitialisationDispersionGroup
+;  ChoixPartenaireGroup
+;  ConvoiElectionLeader true posNewObj
+;  if leader? = true
+;  [
+;    ;; A revoir cette partie
+;   AgentDansCercle xcor ycor zcor "Convoi" 
+;   if length(listeEnnemiAPorteePerception) > 0
+;   [
+;   let angle ChoixAngleDispersionSolo [xcor] of turtle item 0 listeEnnemiAPorteePerception [ycor] of turtle item 0 listeEnnemiAPorteePerception [zcor] of turtle item 0 listeEnnemiAPorteePerception  
+;   set dijkstraPrecalculer NouveauListAdj angle
+;   set dijkstraPrecalculer? true
+;   avanceUnPas
+;   ]
+;  ]
+;  
+;end
+;
+;to-report CreerPointRalliement 
+;  if dijkstraPrecalculer? = false
+;  [
+;    report (list xcor ycor 1)
+;  ]
+;  
+;  if length(dijkstraPrecalculer) >= 20
+;  [
+;    report item random 20 dijkstraPrecalculer
+;  ]
+;  
+;  if length(dijkstraPrecalculer) < 20
+;  [
+;    report item length(dijkstraPrecalculer) dijkstraPrecalculer 
+;  ]
+;  report []
+;end
+;
+;
+;;;Stragtegie Ã  adopter pour la dispersion si le nombreAgentLeader < = 3
+;to DispersionSoloDrone;;;;; planok
+; AgentDansCercle xcor ycor zcor "Convoi" 
+;  ifelse LeaderVivant? = true 
+;  [
+;    if leader? = true [
+;    ;;Envoyer un message aux suiveurs du point de ralliement
+;      set PointDeRalliement CreerPointRalliement 
+;      envoieMessagePointRalliement listeConvoiAPorteePerception
+;    ]
+;  ]
+;  [   
+;     set PointDeRalliement (list xcor ycor zcor)
+;  ]
+;  
+;  envoieMessageDetresse listeConvoiAPorteePerception (list xcor ycor zcor)
+;;DÃ©terminer l'angle selon l'ennemi le plus pret
+;if length(listeEnnemiAPorteePerception) > 0
+;[
+;  let angle ChoixAngleDispersionSolo [xcor] of turtle item 0 listeEnnemiAPorteePerception [ycor] of turtle item 0 listeEnnemiAPorteePerception [zcor] of turtle item 0 listeEnnemiAPorteePerception  
+;  set dijkstraPrecalculer NouveauListAdj angle
+;  set dijkstraPrecalculer? true
+;  avanceUnPas
+;]
+;end
+
+to DispersionDrone 
+  
+     DispersionSoloDrone
+  
+  
+end
+
+
+;;Stragtegie a  adopter pour la dispersion si le nombreAgentLeader < = 3
+to DispersionSoloDrone
+
+  if length(listeEnnemiAPorteePerception) > 0
+  [
+    let angle ChoixAngleDispersionSoloDrone [xcor] of turtle item 0 listeEnnemiAPorteePerception [ycor] of turtle item 0 listeEnnemiAPorteePerception [zcor] of turtle item 0 listeEnnemiAPorteePerception  
+  ; print angle
+    let liste NouveauListAdj angle
+    suivrePath liste 0.0001
+  ]
+end
+
+to-report CreerPointRalliementDrone 
+  report (list round xcor round ycor round zcor)
+end
+
+to-report ChoixAngleDispersionSoloDrone [EnnemisPosX EnnemisPosY EnnemisPosZ]
+  let angle random 360
+  
+  let difX abs (xcor - EnnemisPosX)
+  let difY abs ( ycor - EnnemisPosY)
+  if difX = 0 [
+    ifelse xcor > EnnemisPosX
+    [
+      set angle random 90
+    ]
+    [
+      set angle random -90
+  ]
+  ]
+    if difY = 0 [
+    ifelse xcor > EnnemisPosX
+    [
+      set angle random  ((random 100 / 100) mod (-45 - (-90) + 1) + 90)
+    ]
+    [
+      set angle random ((random 100 / 100) mod (-45 - (-90) + 1) + 90)
+  ]
+    ]
+  report angle
+end
+
+to MiseAjourCarteSoloDrone
+  AgentDansCercleV2 xcor ycor zcor "Drone" true 
+end

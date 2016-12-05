@@ -1,0 +1,83 @@
+;Creer une liste ayant le message a envoyer, il sera composé des éléments suivants:
+; typeMessage (un entier qui correspond au type de message) : (Faut encore décider des types de message)
+; sujet : sujet du message
+; nomAgent : nom de l'expéditeur
+; message  : soit du texte soit une liste contenant les éléments à transmettre
+; destinataire : nom du destinataire du message
+to-report creerMessage [typeMessage sujet destinataire message prioritaire?]
+   let m []
+   set m lput typeMessage m
+   set m lput sujet m
+   set m lput nomAgent m
+   set m lput message m
+   set m lput destinataire m
+   set m lput prioritaire? m
+   report m
+end
+
+; Renvoie la liste des agents à porter de communication
+; A completer quand on combinera les codes
+to-report aPorteeCommunication [destinataire]
+  if breed = Convois [
+    report member? destinataire listeConvoiAPorteeCommunication
+  ]
+  if breed = Ennemis [
+    report member? destinataire listeEnnemiAPorteeCommunication
+  ]
+  if breed = Drones[
+    report member? destinataire listeDroneAPorteeCommunication
+  ]
+  report false
+end
+
+; Envoie le message à l'agent destinataire si il est toujours à portée de communication
+to envoyerMessage [typeMessage sujet destinataire message  prioritaire?]
+ let m creerMessage typeMessage sujet destinataire message prioritaire?
+let i 0 
+while [ i < length(destinataire) ][
+ if aPorteeCommunication item i destinataire = true
+ [ 
+   ;print "jerentrela"
+   ;print m
+   ;print item i destinataire
+     ask turtle item i destinataire [ addBoiteALettre m ]
+ ]
+ set i i + 1
+ 
+]
+end
+
+; Stock les messages avant de les lire
+to addBoiteALettre [ message ]
+  ifelse  item 0 message = 0 
+  [
+    set boiteALettreAccuserReception lput message boiteALettreAccuserReception
+  ]
+  [
+    set boiteALettre lput message boiteALettre
+    if item 5 message [
+      receptionMessage
+    ]
+  ]
+  
+end
+
+to receptionMessage
+  if breed = convois
+  [
+    receptionMessageConvoi
+  ]
+  if breed = ennemis
+  [
+    receptionMessageEnnemi
+  ]
+  if breed = drones
+  [
+    receptionMessageDrones
+  ]
+end
+
+to envoieMessageMourrir [destinataire]
+   envoyerMessage 1 "Je suis mort" destinataire who true
+end
+

@@ -1,0 +1,405 @@
+to-report  mainEnnemi
+  
+  let liste []
+  let etatvisite -1 
+  
+  ifelse  essenceActuel = 0  or munitionActuel = 0
+    [
+      ;e1
+      set liste  Evale1Ennemi
+      set etatvisite 1
+    ]
+    [
+      
+      ifelse length(listeDroneAPorteePerception) > 0 
+      [
+        ;e3
+        set liste  Evale3Ennemi
+        set etatvisite 3
+      ]
+      [
+        ifelse length(listeConvoiAPorteePerception) > 0 
+        [
+          ;e5
+          set liste  Evale5Ennemi
+          set etatvisite 5
+        ]
+        [
+          ;e6
+          set liste  Evale6Ennemi
+          set etatvisite 6
+        ]
+      ]
+    ] 
+      report liste
+end
+
+
+    
+ to-report Evale1Ennemi
+   let liste []
+   set liste lput CalculeTuplee1AvanceRandomEnnemi liste
+   set liste lput CalculeTuplee1TirAPorteeEnnemi liste 
+   set liste lput CalculeTuplee1SeSacrifierEnnemi liste
+   set liste lput CalculeTuplee1ArreteEnnemi liste
+   report (list who "e1tuple"liste)
+  
+ end  
+
+ to-report Evale3Ennemi
+   let liste []
+   set liste lput CalculeTuplee3AttaqueDroneEnnemi liste
+   set liste lput CalculeTuplee3AttaqueConvoiEnnemi liste 
+   set liste lput CalculeTuplee3DemandeRenfortEnnemi liste
+   set liste lput CalculeTuplee3ArreteEnnemi liste
+   set liste lput CalculeTuplee3AllezObjectifEnnemi liste
+    report (list who "e3tuple"liste)
+ end  
+
+ to-report Evale5Ennemi
+   let liste []
+   set liste lput CalculeTuplee5AttaqueConvoiEnnemi liste
+   set liste lput CalculeTuplee5DemandeRenfortEnnemi liste 
+   set liste lput CalculeTuplee5ArreteEnnemi liste
+    report (list who "e5tuple"liste)
+ end  
+
+
+ to-report Evale6Ennemi
+   let liste []
+   set liste lput CalculeTuplee6DeplacementAleatoireEnnemi liste
+ 
+   set liste lput CalculeTuplee6ArreteEnnemi liste
+     report (list who "e6tuple"liste)
+ end
+
+to-report UtiliteE1Ennemi [ action ]
+;   set liste lput CalculeTuplee1AvanceRandomEnnemi liste
+;   set liste lput CalculeTuplee1TirAPorteeEnnemi liste 
+;   set liste lput CalculeTuplee1SeSacrifierEnnemi liste
+;   set liste lput CalculeTuplee1ArreteEnnemi liste
+   if action = "AvanceRandom" ;ok
+  [
+  report  CalculeTuplee1AvanceRandom 
+  ]
+  if action = "TirAPortee"
+  [
+  report CalculeTuplee1TirAPortee
+  ]
+  if action = "SeSacrifier" ; 
+  [
+   report CalculeTuplee1SeSacrifier
+  ]
+  if action =  "Arrete" ;ok
+  [
+  report  CalculeTuplee1Arrete 
+  ]
+  report 0
+end
+to-report CalculeTuplee1AvanceRandom
+  if essenceActuel > 0 and length(listeDroneAPorteePerception) = 0 and length(listeConvoiAPorteePerception) = 0 [
+report 10  
+  ]
+  report 0
+end
+to-report CalculeTuplee1TirAPortee
+    if munitionActuel > 0 and (length(listeDroneAPorteePerception) > 0 or length(listeConvoiAPorteePerception) > 0) [
+report 10
+  ]
+    report 0
+end
+to-report CalculeTuplee1SeSacrifier
+ 
+   if essenceActuel > 0 and length(listeDroneAPorteePerception) > 0  [
+   ;  print (list "perceptionconvoi" who listeConvoiAPorteePerception)
+report 7
+  ]
+   report 0
+end
+to-report CalculeTuplee1Arrete
+  if  length(listeDroneAPorteePerception) = 0 or length(listeConvoiAPorteePerception) = 0 [
+report random 10
+  ]
+   report 0
+  
+end
+
+to-report UtiliteE3Ennemi [ action ]
+;   set liste lput CalculeTuplee3AttaqueDroneEnnemi liste
+;   set liste lput CalculeTuplee3AttaqueConvoiEnnemi liste 
+;   set liste lput CalculeTuplee3DemandeRenfortEnnemi liste
+;   set liste lput CalculeTuplee3ArreteEnnemi liste
+;   set liste lput CalculeTuplee3AllezObjectifEnnemi liste
+  if action =  "AttaqueDrone";ok
+  [
+  report  CalculeTuplee3AttaqueDrone
+  ]
+  if action = "AttaqueConvoi" ;ok
+  [
+  report  CalculeTuplee3AttaqueConvoi
+  ]
+  if action = "DemandeRenfort" ; ok
+  [
+   report CalculeTuplee3DemandeRenfort
+  ]
+  if action = "AllezObjectif" ;ok
+  [
+   report CalculeTuplee3AllezObjectif
+  ]
+  report 0
+end
+to-report CalculeTuplee3AttaqueDrone 
+  if length( listeDroneAPorteePerception ) > 0 and munitionActuel > 0 [
+    report 10
+  ]
+  report 0 
+end
+to-report CalculeTuplee3AttaqueConvoi  
+   if length( listeConvoiAPorteePerception ) > 0 and munitionActuel > 0 [
+    report 10
+  ]
+  report 0 
+end
+to-report CalculeTuplee3DemandeRenfort 
+  if length( listeConvoiAPorteePerception) > 0 and length( listeEnnemiAPorteeCommunication) > 0[
+    report 5
+  ]
+  report 0
+end
+to-report CalculeTuplee3AllezObjectif  
+   if length( listeConvoiAPorteePerception) = 0 or length( listeDroneAPorteePerception) = 0 [
+     report 10
+   ]
+   report 0
+end
+
+
+to-report UtiliteE5Ennemi [ action ]
+;   set liste lput CalculeTuplee5AttaqueConvoiEnnemi liste
+;   set liste lput CalculeTuplee5DemandeRenfortEnnemi liste 
+;   set liste lput CalculeTuplee5ArreteEnnemi liste
+ 
+  if action =  "AttaqueDrone";ok
+  [
+    report CalculeTuplee5AttaqueDrone
+  ]
+  if action = "AttaqueConvoi" ;ok
+  [
+    report CalculeTuplee5AttaqueConvoi
+  ]
+  if action = "DemandeRenfort" ; ok
+  [
+    report CalculeTuplee5DemandeRenfort
+  ]
+  report 0
+end
+  
+to-report CalculeTuplee5AttaqueDrone
+   if length( listeDroneAPorteePerception ) > 0 and munitionactuel > 0 [
+    report 10
+  ]
+   report 0
+end
+to-report CalculeTuplee5AttaqueConvoi
+   if length( listeConvoiAPorteePerception ) > 0 and munitionactuel > 0 [
+    report 10
+  ]
+   report 0
+end
+to-report CalculeTuplee5DemandeRenfort
+ if (length( listeConvoiAPorteePerception) > 0 or length( listeDroneAPorteePerception) > 0 ) and length( listeEnnemiAPorteeCommunication) > 0[
+    report 5
+  ]
+  report 0
+end
+
+ 
+to-report UtiliteE6Ennemi [ action ]
+;     set liste lput CalculeTuplee6DeplacementAleatoireEnnemi liste
+;   set liste lput CalculeTuplee6RegroupeEnnemi liste 
+;   set liste lput CalculeTuplee6ArreteEnnemi liste
+  if action = "AvanceRandom" ;ok
+  [
+    report CalculeTuplee6AvanceRandom
+  ]
+ 
+  if action =  "Arrete" ;ok
+  [
+    report CalculeTuplee6Arrete
+  ]
+  report 0
+end
+to-report CalculeTuplee6AvanceRandom
+;  print "Avance"
+  if length(listeConvoiAPorteePerception) = 0 and length(listeDroneAPorteePerception) = 0 [
+    report 10
+  ]
+  report random 10
+end
+to-report CalculeTuplee6Arrete
+  report random 10
+end
+
+
+
+
+
+
+to-report CalculeTuplee1AvanceRandomEnnemi
+  let liste (list "AvanceRandom")
+  let aux (list random 10 10)
+  if essenceActuel > 0
+  [
+    set aux (list UtiliteE1Ennemi item 0 liste EnnemiDecision)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee1TirAPorteeEnnemi ; ressource choisit de manière arbitraire (changer si il tire plus de balle à chaque scan)
+  let liste (list "TirAPortee")
+  let aux (list random 10 1)
+  if essenceActuel = 0 and munitionActuel > 0
+  [
+    set aux (list UtiliteE1Ennemi item 0 liste  1)
+  ]
+  set liste lput aux liste
+  report liste
+end
+to-report CalculeTuplee1SeSacrifierEnnemi
+  let liste (list "SeSacrifier")
+  let aux (list random 10 EnnemiDistanceObservable)
+  if munitionActuel = 0
+  [
+    set aux (list UtiliteE1Ennemi item 0 liste EnnemiDecision)
+  ]
+  set liste lput aux liste
+  report liste
+end
+to-report CalculeTuplee1ArreteEnnemi
+  let liste (list "Arrete")
+  let aux (list random 10 0)
+  if random 1 = 0
+  [
+    set aux (list UtiliteE1Ennemi item 0 liste 0)
+  ]
+  set liste lput aux liste
+  report liste
+end
+to-report CalculeTuplee3AttaqueDroneEnnemi ; ressource choisit de manière arbitraire (changer si il tire plus de balle à chaque scan)
+  let liste (list "AttaqueDrone")
+  let aux (list random 10 1)
+  if length(listeDroneAPorteePerception) > 0 and munitionActuel > 0
+  [
+    set aux (list UtiliteE3Ennemi item 0 liste 1)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee3AttaqueConvoiEnnemi; ressource choisit de manière arbitraire (changer si il tire plus de balle à chaque scan)
+  let liste (list "AttaqueConvoi")
+  let aux (list random 10 1)
+  if length(listeDroneAPorteePerception) != 0 and munitionActuel > 0 and length(listeConvoiAPorteePerception) > 0
+  [
+    set aux (list UtiliteE3Ennemi item 0 liste 1)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee3DemandeRenfortEnnemi
+  let liste (list "DemandeRenfort")
+  let aux (list random 10 0)
+  if length(listeEnnemiAPorteeCommunication) > 0
+  [
+    set aux (list UtiliteE3Ennemi item 0 liste  0)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee3ArreteEnnemi
+ let liste (list "Arrete")
+ let aux (list random 10 0)
+ if random 1 = 0
+  [
+    set aux (list UtiliteE3Ennemi item 0 liste 0)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee3AllezObjectifEnnemi
+  let liste (list "AllezObjectif")
+  let aux (list random 10 distanceManhattan (list xcor ycor zcor) patchObjectif)
+  if  length(listeDroneAPorteePerception) = 0 and length(listeConvoiAPorteePerception) > 0
+    [
+      set aux (list UtiliteE3Ennemi item 0 liste EnnemiDecision)
+    ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee5AttaqueConvoiEnnemi ; ressource choisit de manière arbitraire (changer si il tire plus de balle à chaque scan)
+  let liste (list "AttaqueConvoi")
+  let aux (list random 10 1)
+  if length(listeConvoiAPorteePerception) > 0 and munitionActuel > 0
+  [
+    set aux (list UtiliteE5Ennemi item 0 liste 1)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee5DemandeRenfortEnnemi
+ let liste (list "DemandeRenfort")
+ let aux (list random 10 0)
+ if length(listeConvoiAPorteePerception) > 0 and munitionActuel = 0
+  [
+    set aux (list UtiliteE5Ennemi item 0 liste  0)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee5ArreteEnnemi
+  let liste (list "Arrete")
+  let aux (list random 10 0)
+  if random 1 = 0
+  [
+    set aux (list UtiliteE5Ennemi item 0 liste 0)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee6DeplacementAleatoireEnnemi; pas choisit
+  let liste (list "AvanceRandom")
+  let seuil  10
+  let aux (list random 10  10)
+  if essenceActuel > seuil
+  [
+    set aux (list UtiliteE6Ennemi item 0 liste EnnemiDecision)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+
+
+to-report CalculeTuplee6ArreteEnnemi
+  let liste (list "Arrete")
+  let seuil 10
+  let aux (list random 10 0)
+  if essenceActuel < seuil
+  [
+    set aux (list UtiliteE6Ennemi item 0 liste  0)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+
+
+

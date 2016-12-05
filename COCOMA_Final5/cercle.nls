@@ -1,0 +1,992 @@
+
+;;;;C'est la perception des agents en 2D
+to-report cerclePerception [ PosX PosY PosZ taille]
+  let i 0
+  let y 0
+  let Xn PosX
+  let tailleX taille
+  let Yn PosY
+  let liste [] 
+  let prochain (list PosX posY PosZ)
+  set liste lput prochain liste
+  ;;;Cote positive
+  while [ i < taille]
+  [ 
+    set Xn PosX + i
+    set y 0
+    while [ y < tailleX ]
+    [
+      set Yn PosY + y
+      set prochain (list Xn Yn PosZ)
+      
+          if not member? prochain  liste 
+        [
+          
+           set liste lput prochain liste
+        ]    
+      set y y + 1 
+    ]
+    
+    set y 0
+     while [ y < tailleX ]
+    [
+      set Yn PosY - y
+      set prochain (list Xn Yn PosZ)
+     
+          if not member? prochain  liste 
+        [
+           set liste lput prochain liste
+        ]
+      set y y + 1 
+    ]
+    set tailleX tailleX - 1
+     set i i + 1
+  ]
+  ;;;;;;;;;;;Cote negative
+   ;;;Cote positive
+   set tailleX taille
+   set y 0
+   set i 0
+  while [ i < taille]
+  [ 
+    set Xn PosX - i
+    set y 0
+    while [ y < tailleX ]
+    [
+      set Yn PosY + y
+      set prochain (list Xn Yn PosZ)
+      
+          if not member? prochain  liste 
+        [
+           set liste lput prochain liste
+        ]
+      set y y + 1 
+    ]   
+    set y 0
+     while [ y < tailleX ]
+    [
+      set Yn PosY - y
+      set prochain (list Xn Yn PosZ)
+      
+          if not member? prochain  liste 
+        [
+           set liste lput prochain liste
+        ]
+      set y y + 1 
+    ]
+    set tailleX tailleX - 1
+     set i i + 1
+  ]
+report liste
+
+end
+;;;Rempli les liste de perception /communication et portee de tir de l'agent appelant avec les agents présent dans la zone
+to AgentDansCercle [  posX posY posZ typeAgent miseajourcarte? Perception? Communication? PorteeTir?]
+  
+  ;; Fonction de reset de liste à faire
+  let listePerception []
+  let listeCommunication []
+  let listePorteeTir []
+  
+  if typeAgent = "Convoi"
+  [
+    if Perception? [
+    set listePerception cerclePerception3DS posX posY posZ ConvoiDistanceObservable false
+    ]
+    if Communication? [
+    set listeCommunication cerclePerception3DS posX posY posZ ConvoiDistanceCommunication false
+    ]
+  
+  ]
+  if typeAgent = "Ennemi"
+  [
+    if Perception? [
+    set listePerception cerclePerception3DS posX posY posZ EnnemiDistanceObservable false
+    ]
+    if Communication? [
+    set listeCommunication cerclePerception3DS posX posY posZ EnnemiDistanceCommunication false
+    ]
+    if PorteeTir? [
+    set listePorteeTir cerclePerception3DS posX posY posZ  EnnemiPorteeDeTir false
+    ]
+     
+  ]
+  if typeAgent = "Drone"
+  [
+    if Perception?[
+    set listePerception cerclePerception3DS posX posY posZ DroneDistanceObservable false
+  ]
+  if Communication? [
+    set listeCommunication cerclePerception3DS posX posY posZ DroneDistanceCommunication false
+  ]
+  if PorteeTir? [
+    set listePorteeTir cerclePerception3DS posX posY posZ DronePorteeDeTir false
+  ]
+  ]
+  
+  
+  
+  let i 0
+  if miseajourcarte?  [
+    
+     
+  while [ i < length(listePerception) ]
+  [
+    
+    let x item 0 item i listePerception
+    let y item 1 item i listePerception
+    let z item 2 item i listePerception
+
+    if z = 1
+    [   
+        let listeVoisin []
+        ask patch x y z [ ask neighbors [ set listeVoisin lput (list pxcor pycor pzcor) listeVoisin ] ]
+        
+        let listeVoisin2 []
+        let k 0
+        while [ k < length(listeVoisin) ]
+        [
+          
+          let coul true
+          ifelse breed = convois or breed = ennemis
+          [
+            ask patch item 0 item k listeVoisin item 1 item k listeVoisin item 2 item k listeVoisin [
+              if pcolor > 31  and pcolor <= 39 and pcolor != 35 [set coul false ]
+              
+              ask patch item 0 item k listeVoisin item 1 item k listeVoisin 0 [
+                if pcolor > 101 and pcolor <= 109 [ set coul false ]
+              ] 
+            ]
+          ]
+          [
+            ask patch item 0 item k listeVoisin item 1 item k listeVoisin item 2 item k listeVoisin [
+              if pcolor > 31  and pcolor <= 39 and pcolor != 35 [set coul false ]
+            ]
+          ]
+   
+          if member? item k listeVoisin listePerception and item 2 item k listeVoisin != 0 and coul 
+          [
+            if (breed = Ennemis or breed = Convois) and item 2 item k listeVoisin = 1 [
+                set listeVoisin2 lput item k listeVoisin listeVoisin2
+            ]
+            
+          if breed = Drones [
+            set listeVoisin2 lput item k listeVoisin listeVoisin2
+          ]
+          ]
+          set k k + 1 
+        ]
+       
+ 
+        set listeAdj addVoisins listeAdj round x round y round z listeVoisin2
+       
+    ]
+      set i i + 1
+    ]
+  ]
+  
+  set i 0
+  while [ i < length(listePerception) ]
+    [
+
+    if typeAgent = "Convoi"
+    [
+      
+        let Agent convois-on patch item 0 item i listePerception item 1 item i listePerception item 2 item i listePerception
+        if count(Agent) > 0
+        [
+          let agent11 [who] of one-of Agent
+          if  not member? agent11 listeConvoiAPorteePerception[
+            set listeConvoiAPorteePerception lput agent11 listeConvoiAPorteePerception
+          ]
+        ]
+        
+        let Agent1 ennemis-on patch item 0 item i listePerception item 1 item i listePerception item 2 item i listePerception     
+        if count(Agent1) > 0
+        [
+          let agent11 [who] of one-of Agent1
+          if  not member? agent11 listeEnnemiAPorteePerception
+          [
+            set listeEnnemiAPorteePerception lput agent11 listeEnnemiAPorteePerception
+          ]
+        ]
+        let Agent2 drones-on patch item 0 item i listePerception item 1 item i listePerception item 2 item i listePerception
+        if count(Agent2) > 0
+        [
+          let agent11 [who] of one-of Agent2
+          if  not member? agent11 listeDroneAPorteePerception
+          [
+            set listeDroneAPorteePerception lput agent11 listeDroneAPorteePerception
+          ]
+        ]
+    ]
+  
+    if typeAgent = "Ennemi"
+    [
+     
+        let Agent convois-on patch item 0 item i listePerception item 1 item i listePerception item 2 item i listePerception
+        if count(Agent) > 0
+        [
+          let agent11 [who] of one-of Agent
+          if  not member? agent11 listeConvoiAPorteePerception
+          [
+            set listeConvoiAPorteePerception lput agent11 listeConvoiAPorteePerception
+          ]
+        ]
+        let Agent1 ennemis-on patch item 0 item i listePerception item 1 item i listePerception item 2 item i listePerception
+        if count(Agent1) > 0
+        [
+          let agent11 [who] of one-of Agent1
+          if  not member? agent11 listeEnnemiAPorteePerception
+          [
+            set listeEnnemiAPorteePerception lput agent11 listeEnnemiAPorteePerception
+          ]
+        ]
+        
+        let Agent2 drones-on patch item 0 item i listePerception item 1 item i listePerception item 2 item i listePerception
+        if count(Agent2) > 0
+        [
+          let agent11 [who] of one-of Agent2
+          if  not member? agent11 listeDroneAPorteePerception
+          [
+            set listeDroneAPorteePerception lput agent11 listeDroneAPorteePerception
+          ]
+        ]
+    ]
+  
+    if typeAgent = "Drone"
+    [
+     
+        let Agent convois-on patch item 0 item i listePerception item 1 item i listePerception item 2 item i listePerception
+        if count(Agent) > 0
+        [
+          let agent11 [who] of one-of Agent
+          if  not member? agent11 listeConvoiAPorteePerception
+          [
+            set listeConvoiAPorteePerception lput agent11 listeConvoiAPorteePerception
+          ]
+        ]
+        
+        let Agent1 ennemis-on patch item 0 item i listePerception item 1 item i listePerception item 2 item i listePerception
+        if count(Agent1) > 0
+        [
+          let agent11 [who] of one-of Agent1
+          if  not member? agent11 listeEnnemiAPorteePerception
+          [
+            set listeEnnemiAPorteePerception lput agent11 listeEnnemiAPorteePerception
+          ]
+        ]
+        
+        let Agent2 drones-on patch item 0 item i listePerception item 1 item i listePerception item 2 item i listePerception
+        if count(Agent2) > 0
+        [
+          let agent11 [who] of one-of Agent2
+          if  not member? agent11 listeDroneAPorteePerception
+          [
+            set listeDroneAPorteePerception lput agent11 listeDroneAPorteePerception
+          ]
+        ]
+    ]
+    set i i + 1
+  ]
+  
+  set i 0
+  while [ i < length(listeCommunication) ]
+  [
+    if typeAgent = "Convoi"
+    [
+     
+        let Agent convois-on patch item 0 item i listeCommunication item 1 item i listeCommunication item 2 item i listeCommunication
+        if count(Agent) > 0
+        [
+          let agent11 [who] of one-of Agent
+          if  not member? agent11 listeConvoiAPorteeCommunication[
+            set listeConvoiAPorteeCommunication lput agent11 listeConvoiAPorteeCommunication
+          ]
+        ]
+        let Agent1 ennemis-on patch item 0 item i listeCommunication item 1 item i listeCommunication item 2 item i listeCommunication
+        if count(Agent1) > 0
+        [
+        let agent11 [who] of one-of Agent1
+          if  not member? agent11 listeEnnemiAPorteeCommunication[
+        set listeEnnemiAPorteeCommunication lput agent11 listeEnnemiAPorteeCommunication
+          ]
+        ]
+        
+        let Agent2 drones-on patch item 0 item i listeCommunication item 1 item i listeCommunication item 2 item i listeCommunication
+        if count(Agent2) > 0
+        [
+          let agent11 [who] of one-of Agent2
+          if  not member? agent11 listeDroneAPorteeCommunication[
+        set listeDroneAPorteeCommunication lput agent11 listeDroneAPorteeCommunication
+          ]
+        ]
+    ]
+  
+    if typeAgent = "Ennemi"
+    [
+    
+   
+        let Agent convois-on patch item 0 item i listeCommunication item 1 item i listeCommunication item 2 item i listeCommunication
+        if count(Agent) > 0
+        [
+          let agent11 [who] of one-of Agent
+          if  not member? agent11 listeConvoiAPorteeCommunication[
+            set listeConvoiAPorteeCommunication lput agent11 listeConvoiAPorteeCommunication
+          ]
+        ]
+        let Agent1 ennemis-on patch item 0 item i listeCommunication item 1 item i listeCommunication item 2 item i listeCommunication
+        if count(Agent1) > 0 
+        [
+          let agent11 [who] of one-of Agent1 
+          if  not member? agent11 listeEnnemiAPorteeCommunication[
+            set listeEnnemiAPorteeCommunication lput agent11 listeEnnemiAPorteeCommunication
+          ]
+        ]
+        let Agent2 drones-on patch item 0 item i listeCommunication item 1 item i listeCommunication item 2 item i listeCommunication
+        if count(Agent2) > 0
+        [
+          let agent11 [who] of one-of Agent2
+          if  not member? agent11 listeDroneAPorteeCommunication[
+            set listeDroneAPorteeCommunication lput agent11 listeDroneAPorteeCommunication
+          ]
+        ]
+    ]
+  
+    if typeAgent = "Drone"
+    [
+      
+        let Agent convois-on patch item 0 item i listeCommunication item 1 item i listeCommunication item 2 item i listeCommunication
+        if count(Agent) > 0
+        [
+          let agent11 [who] of one-of Agent
+          if  not member? agent11 listeConvoiAPorteeCommunication[
+            set listeConvoiAPorteeCommunication lput agent11 listeConvoiAPorteeCommunication
+          ]
+        ]
+        
+        let Agent1 ennemis-on patch item 0 item i listeCommunication item 1 item i listeCommunication item 2 item i listeCommunication
+        if count(Agent1) > 0
+        [
+          let agent11 [who] of one-of Agent1
+          if  not member? agent11 listeEnnemiAPorteeCommunication[
+            set listeEnnemiAPorteeCommunication lput agent11 listeEnnemiAPorteeCommunication
+          ]
+        ]
+        let Agent2 drones-on patch item 0 item i listeCommunication item 1 item i listeCommunication item 2 item i listeCommunication
+        if count(Agent2) > 0
+        [
+          let agent11 [who] of one-of Agent2
+          if  not member? agent11 listeDroneAPorteeCommunication[
+            set listeDroneAPorteeCommunication lput agent11 listeDroneAPorteeCommunication
+          ]
+        ]
+      
+    ]
+    set i i + 1
+  ]
+  
+  set i 0
+  while [ i < length(listePorteeTir) ]
+  [
+    if typeAgent = "Ennemi"
+    [
+     
+        let Agent convois-on patch item 0 item i listePorteeTir item 1 item i listePorteeTir item 2 item i listePorteeTir
+        if count(Agent) > 0
+        [
+          let agent11 [who] of one-of Agent
+          if  not member? agent11 listeConvoiAPorteeDeTir[
+            set listeConvoiAPorteeDeTir lput agent11 listeConvoiAPorteeDeTir
+          ]
+        ]
+        let Agent1 ennemis-on patch item 0 item i listePorteeTir item 1 item i listePorteeTir item 2 item i listePorteeTir
+        if count(Agent1) > 0
+        [
+          let agent11 [who] of one-of Agent1
+          if  not member? agent11 listeEnnemiAPorteeDeTir[
+            set listeEnnemiAPorteeDeTir lput agent11 listeEnnemiAPorteeDeTir
+          ]
+        ]
+        let Agent2 drones-on patch item 0 item i listePorteeTir item 1 item i listePorteeTir item 2 item i listePorteeTir
+        if count(Agent2) > 0
+        [
+          let agent11 [who] of one-of Agent2
+          if  not member? agent11 listeDroneAPorteeDeTir[
+            set listeDroneAPorteeDeTir lput agent11 listeDroneAPorteeDeTir
+          ]
+        ]
+    ]
+  
+    if typeAgent = "Drone"
+    [
+     
+        let Agent convois-on patch item 0 item i listePorteeTir item 1 item i listePorteeTir item 2 item i listePorteeTir
+        if count(Agent) > 0
+        [
+          let agent11 [who] of one-of Agent
+          if  not member? agent11 listeConvoiAPorteeDeTir[
+            set listeConvoiAPorteeDeTir lput agent11 listeConvoiAPorteeDeTir
+          ]
+        ]
+        let Agent1 ennemis-on patch item 0 item i listePorteeTir item 1 item i listePorteeTir item 2 item i listePorteeTir
+        if count(Agent1) > 0
+        [
+          let agent11 [who] of one-of Agent1
+          if  not member? agent11 listeEnnemiAPorteeDeTir[
+            set listeEnnemiAPorteeDeTir lput agent11 listeEnnemiAPorteeDeTir
+          ]
+        ]
+      
+        let Agent2 drones-on patch item 0 item i listePorteeTir item 1 item i listePorteeTir item 2 item i listePorteeTir
+        if count(Agent2) > 0
+        [
+          let agent11 [who] of one-of Agent2
+          if  not member? agent11 listeDroneAPorteeDeTir[
+            set listeDroneAPorteeDeTir lput agent11 listeDroneAPorteeDeTir
+          ]
+        ]
+    ]
+    set i i + 1
+  ]
+  if member? who  listeConvoiAPorteePerception 
+  [
+    set listeConvoiAPorteePerception remove who listeConvoiAPorteePerception
+  ]
+  
+  if member? who   listeEnnemiAPorteePerception 
+  [
+    set listeEnnemiAPorteePerception remove who listeEnnemiAPorteePerception
+  ]
+  
+  if member? who   listeDroneAPorteePerception 
+  [
+    set listeDroneAPorteePerception remove who listeDroneAPorteePerception
+  ]
+  
+  if member? who   listeEnnemiAPorteeCommunication 
+  [
+    set listeEnnemiAPorteeCommunication remove who listeEnnemiAPorteeCommunication
+  ]
+ 
+  if member? who   listeConvoiAPorteeCommunication 
+  [
+    set listeConvoiAPorteeCommunication remove who listeConvoiAPorteeCommunication
+  ]
+  
+  if member? who   listeDroneAPorteeCommunication 
+  [
+    set listeDroneAPorteeCommunication remove who listeDroneAPorteeCommunication
+  ]
+  
+  if typeAgent = "Ennemi" or typeAgent  = "Drone"
+  [
+    if member? who   listeConvoiAPorteeDeTir 
+    [
+      set listeConvoiAPorteeDeTir remove who listeConvoiAPorteeDeTir
+    ]
+   
+    if member? who   listeEnnemiAPorteeDeTir 
+    [
+      set listeEnnemiAPorteeDeTir remove who listeEnnemiAPorteeDeTir
+    ]
+    
+    if member? who  listeDroneAPorteeDeTir 
+    [
+      set listeDroneAPorteeDeTir remove who listeDroneAPorteeDeTir
+    ]
+  ]
+  
+end
+
+to AgentDansCercleV2 [  posX posY posZ typeAgent miseajourcarte? ]
+   
+  let variable 0
+  if typeAgent = "Convoi" [
+   let liste  (list  ConvoiDistanceObservable ConvoiDistanceCommunication )
+     let i 0 
+     let indice -1
+     let maxvalue 0
+     while [ i < length(liste) ]
+     [
+      if item i liste > maxvalue [
+        set indice i  
+       set maxvalue item i liste
+     ]
+      set i i + 1
+  ]
+    set listeConvoiAPorteePerception []
+    set listeEnnemiAPorteePerception []
+    set listeDroneAPorteePerception  []
+
+    set listeEnnemiAPorteeCommunication []
+    set listeConvoiAPorteeCommunication []
+    set listeDroneAPorteeCommunication  []
+     if indice = 0 [
+       AgentDansCercle  posX posY posZ typeAgent miseajourcarte? true false false 
+       if length(listeDroneAPorteePerception) > 0 [
+       AgentDansCercle  posX posY posZ typeAgent false false true false 
+       ]
+  ]
+     if indice = 1 [
+       AgentDansCercle  posX posY posZ typeAgent miseajourcarte? false true false 
+       if length(listeDroneAPorteeCommunication) > 0 or length(listeConvoiAPorteeCommunication) > 0 or length(listeEnnemiAPorteePerception) > 0 [
+            AgentDansCercle  posX posY posZ typeAgent false true false false 
+ 
+       ]
+        ]
+     
+  ]
+  if typeAgent = "Ennemi" [
+     let liste  (list  EnnemiDistanceObservable EnnemiDistanceCommunication EnnemiPorteeDeTir)
+     let i 0 
+     let indice -1
+     let maxvalue 0
+     while [ i < length(liste) ]
+     [
+      if item i liste > maxvalue [
+        set indice i  
+       set maxvalue item i liste
+     ]
+      set i i + 1
+  ]
+      set listeConvoiAPorteePerception []
+    set listeEnnemiAPorteePerception []
+    set listeDroneAPorteePerception  []
+
+    set listeEnnemiAPorteeCommunication []
+    set listeConvoiAPorteeCommunication []
+    set listeDroneAPorteeCommunication  []
+     set listeConvoiAPorteeDeTir []
+     set listeEnnemiAPorteeDeTir []
+     set listeDroneAPorteeDeTir  []
+      if indice = 0 [
+       AgentDansCercle  posX posY posZ typeAgent miseajourcarte? true false false 
+       if length(listeEnnemiAPorteePerception) > 0 [
+          AgentDansCercle  posX posY posZ typeAgent false false true false 
+       ]
+       if length(listeConvoiAPorteePerception) > 0 or length(listeDroneAPorteePerception) > 0
+       [
+          AgentDansCercle  posX posY posZ typeAgent false false false true
+       ]
+  ]
+     if indice = 1 [
+       AgentDansCercle  posX posY posZ typeAgent miseajourcarte? false true false 
+       if length(listeConvoiAPorteeCommunication) > 0 or length(listeDroneAPorteeCommunication) > 0
+       [
+          AgentDansCercle  posX posY posZ typeAgent false false false true
+       ]
+        if length(listeConvoiAPorteeCommunication) > 0 
+       [
+          AgentDansCercle  posX posY posZ typeAgent false true false false
+       ] 
+       
+  ]
+      if indice = 2 [
+       AgentDansCercle  posX posY posZ typeAgent miseajourcarte? false false true
+        if length(listeConvoiAPorteeDeTir) > 0 
+       [
+          AgentDansCercle  posX posY posZ typeAgent false true false false
+       ]   
+  ]
+      
+      ]
+  
+  if typeAgent = "Drone" [
+      let liste  (list  DroneDistanceObservable DroneDistanceCommunication DronePorteeDeTir) 
+     let i 0 
+     let indice -1
+     let maxvalue 0
+     while [ i < length(liste) ]
+     [
+      if item i liste > maxvalue [
+        set indice i  
+       set maxvalue item i liste
+     ]
+      set i i + 1
+  ]
+    set listeConvoiAPorteePerception []
+    set listeEnnemiAPorteePerception []
+    set listeDroneAPorteePerception  []
+
+    set listeEnnemiAPorteeCommunication []
+    set listeConvoiAPorteeCommunication []
+    set listeDroneAPorteeCommunication  []
+     set listeConvoiAPorteeDeTir []
+     set listeEnnemiAPorteeDeTir []
+     set listeDroneAPorteeDeTir  []
+         if indice = 0 [
+       AgentDansCercle  posX posY posZ typeAgent miseajourcarte? true false false 
+         if length(listeConvoiAPorteePerception) > 0 or  length(listeDroneAPorteePerception) > 0
+       [
+          AgentDansCercle  posX posY posZ typeAgent false  false true false
+       ] 
+          if length(listeEnnemiAPorteePerception) > 0 [
+          AgentDansCercle  posX posY posZ typeAgent false false false true
+       ] 
+  ]
+     if indice = 1 [
+       AgentDansCercle  posX posY posZ typeAgent miseajourcarte? false true false 
+          if length(listeConvoiAPorteeCommunication) > 0 [
+          AgentDansCercle  posX posY posZ typeAgent false true false false 
+       ]  
+          if length(listeEnnemiAPorteeCommunication) > 0 [
+          AgentDansCercle  posX posY posZ typeAgent false false false true
+       ] 
+          
+  ]
+      if indice = 2 [
+       AgentDansCercle  posX posY posZ typeAgent miseajourcarte? false false true 
+         if length(listeConvoiAPorteeDeTir) > 0 [
+          AgentDansCercle  posX posY posZ typeAgent false true false false 
+       ] 
+          if length(listeDroneAPorteeDeTir) > 0 or length(listeConvoiAPorteeDeTir) > 0 [
+          AgentDansCercle  posX posY posZ typeAgent false false true false 
+       ] 
+         
+  ]
+  ]
+  
+  
+  
+ 
+  
+end
+
+
+
+;;;;; Je vais fixer le PosZ entre 0 et 10
+to-report cerclePerception3D [ PosX PosY  PosZ taille]
+  let i 0
+  let y 0
+  let Xn PosX
+  let tailleX taille
+  let Yn PosY
+  let liste []
+  let maxZ 10
+  let prochain (list PosX posY PosZ)
+  set liste lput prochain liste
+  ;;;Cote positive
+  while [ i < taille]
+  [ 
+    set Xn PosX + i
+    set y 0
+    while [ y < tailleX ]
+    [
+      set Yn PosY + y
+      set prochain (list Xn Yn)
+          if not member? prochain  liste 
+        [
+          let d 0
+          while [ d < maxZ ]
+          [
+            set prochain (list Xn Yn d)
+              if not member? prochain  liste 
+        [
+           set liste lput prochain liste
+        ]
+           set d d + 1
+          ]
+        ]    
+      set y y + 1 
+    ]
+    
+    set y 0
+     while [ y < tailleX ]
+    [
+      set Yn PosY - y
+      set prochain (list Xn Yn)
+          if not member? prochain  liste 
+        [
+          let d1 0
+          while [ d1 < maxZ ]
+          [
+            set prochain (list Xn Yn d1)
+              if not member? prochain  liste 
+        [
+           set liste lput prochain liste
+        ]
+           set d1 d1 + 1 
+          ]
+        ]
+      set y y + 1 
+    ]
+    set tailleX tailleX - 1
+     set i i + 1
+  ]
+  ;;;;;;;;;;;Cote negative
+   ;;;Cote positive
+   set tailleX taille
+   set y 0
+   set i 0
+  while [ i < taille]
+  [ 
+    set Xn PosX - i
+    set y 0
+    while [ y < tailleX ]
+    [
+      set Yn PosY + y
+      set prochain (list Xn Yn)
+          if not member? prochain  liste 
+        [
+          let d2 0
+          while  [ d2 < maxZ ]
+          [
+           set prochain (list Xn Yn d2)
+             if not member? prochain  liste 
+        [
+           set liste lput prochain liste
+        ]
+           set d2 d2 + 1
+          ]
+        ]
+      set y y + 1 
+    ]   
+    set y 0
+     while [ y < tailleX ]
+    [
+      set Yn PosY - y
+      set prochain (list Xn Yn )
+          if not member? prochain  liste 
+        [
+          let d5 0
+          while [ d5 < maxZ ] [
+          set prochain (list Xn Yn d5)
+            if not member? prochain  liste 
+        [
+           set liste lput prochain liste
+        ]
+           set d5 d5 + 1 
+          ]  
+        ]
+      set y y + 1 
+    ]
+    set tailleX tailleX - 1
+     set i i + 1
+  ]
+report liste
+
+end
+
+to-report cerclePerception3DS [ PosX PosY  PosZ taille mountain? ]
+  set PosX round PosX
+  set PosY round PosY
+  set PosZ round PosZ
+  let liste (list (list PosX PosY PosZ))
+  
+  let i 1
+  while [ i <= taille ]
+  [
+    if PosY + i <= max-pycor
+    [
+     let elem (list PosX (PosY + i)  PosZ)
+     set liste lput  elem liste
+    ]
+    
+    if PosY - i >= min-pycor
+    [
+     let elem (list PosX (PosY - i) PosZ)
+     set liste lput  elem liste
+    ]
+    set i i + 1
+  ]
+  
+  let tailleRestante taille 
+  let j 1
+  while [ j < (taille + 1) ]
+  [
+  
+    set i 0
+    while [ i < tailleRestante ]
+   [
+     if PosX + j <= max-pxcor
+     [
+       if PosY + i <= max-pycor
+       [
+         let elem (list (PosX + j) (PosY + i) PosZ)
+         set liste lput  elem liste
+       ]
+    
+       if PosY - i >= min-pycor
+       [
+         let elem (list (PosX + j) (PosY - i) PosZ)
+         set liste lput  elem liste
+       ]
+     ]
+     
+     if PosX - j >= min-pxcor
+     [
+       if PosY + i <= max-pycor
+       [
+         let elem (list (PosX - j) (PosY + i) PosZ)
+         set liste lput  elem liste
+       ]
+    
+       if PosY - i >= min-pycor
+       [
+         let elem (list (PosX - j) (PosY - i) PosZ)
+         set liste lput  elem liste
+       ]
+     ]
+     
+    set i i + 1
+     
+   ]
+   
+   set j j + 1
+   set tailleRestante tailleRestante - 1 
+  ]
+  
+  if mountain?
+  [
+    report liste
+  ]
+  
+  let listeDistance (list (list (list PosX PosY PosZ) 0))
+  let t 1 
+  while [ t <= taille]
+  [
+    
+    let x -1 * t
+    while [ x <= t ]
+    [
+      let y -1 * t
+      while [ y <= t ]
+      [
+        if x = t or x = (-1 * t) or y = t or y = (-1 * t)
+        [
+         if PosX - x >= min-pxcor
+         [
+           if PosY + y <= max-pycor
+           [
+             let elem (list (PosX - x) (PosY + y) PosZ)
+             if member? elem liste
+             [
+               set listeDistance lput (list elem t) listeDistance
+             ]
+           ]
+           
+           if PosY - y >= min-pycor
+           [
+             let elem (list (PosX - x) (PosY - y) PosZ)
+             if member? elem liste
+             [
+               set listeDistance lput (list elem t) listeDistance
+             ]
+           ]
+         ]
+         
+         if PosX + x <= max-pxcor  
+         [
+           if PosY + y <= max-pycor
+           [
+             let elem (list (PosX + x) (PosY + y) PosZ)
+             if member? elem liste
+             [
+               set listeDistance lput (list elem t) listeDistance
+             ]
+           ]
+           
+           if PosY - y >= min-pycor
+           [
+             let elem (list (PosX + x) (PosY + y) PosZ)
+             if member? elem liste
+             [
+               set listeDistance lput (list elem t) listeDistance
+             ]
+           ]
+         ]
+        ] 
+        set y y + 1   
+      ]
+      set x x + 1
+    ]
+    
+   set t t + 1 
+  ]
+  
+  set i 0
+  let listeAux []
+  while [ i < length(listeDistance) ]
+  [
+    set t  taille - item 1 item i listeDistance
+    let elem item 0 item i listeDistance
+    set j 1
+    while [ j <= t ]
+    [
+     if PosZ + j < max-pzcor
+     [
+       set listeAux lput (list (list item 0 elem item 1 elem ( item 2 elem + j)) (item 1 item i listeDistance + j)) listeAux
+     ]
+     
+     if PosZ - j >= min-pzcor
+     [
+       set listeAux lput (list (list item 0 elem item 1 elem ( item 2 elem - j)) (item 1 item i listeDistance + j))  listeAux
+     ]
+     set j j + 1 
+    ]
+    set i i + 1
+  ]
+  
+  set i 0
+  while [ i < length(listeAux) ]
+  [
+   set listeDistance lput item i listeAux listeDistance
+   set i i + 1 
+  ]
+  
+  let listeReturn []
+  set i 0
+  while [ i < length(listeDistance)]
+  [
+    set listeReturn lput item 0 item i listeDistance listeReturn 
+    set i i + 1
+  ]
+  report listeReturn
+end
+
+to-report parallepideRectangle [ PosInitX PosInitY PosInitZ PosFinalX PosFinalY PosFinalZ ]
+  let liste []
+  
+  let minX posInitX
+  let maxX posFinalX
+  if maxX < minX
+  [
+   set minX posFinalX
+   set maxX posInitX 
+  ] 
+  
+  let minY posInitY
+  let maxY posFinalY
+  if maxY < minY
+  [
+   set minY posFinalY
+   set maxY posInitY 
+  ] 
+  
+  let minZ posInitZ
+  let maxZ posFinalZ
+  if maxZ < minZ
+  [
+   set minZ posFinalZ
+   set maxZ posInitZ 
+  ] 
+  
+  let a minX
+  while [ a < maxX ]
+  [
+   let b minY
+   while [ b < maxY ]
+   [
+    let c minZ
+    while [ c < maxZ ]
+    [
+     set liste lput (list a b c) liste
+     set c c + 1 
+    ] 
+     set b b + 1
+   ] 
+    set a a + 1
+  ]
+  report liste
+end

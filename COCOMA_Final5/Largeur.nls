@@ -1,0 +1,368 @@
+to-report copieListe [ Liste ]
+  let NewListe []
+  let i 0
+  while [ i <  length(Liste) ]
+  [
+   let PosX item 0 item 0 item i Liste 
+   let PosY item 1 item 0 item i Liste
+   let PosZ item 2 item 0 item i Liste
+   let NewVoisin item 1 item i Liste
+   
+   set NewListe addVoisins  NewListe PosX PosY PosZ NewVoisin 
+   set i i + 1 
+  ]
+  
+  report NewListe
+end
+
+; Renvoie l'indice de la liste correspondant à l'élement [ posX posY posZ]
+; Si l'élement [ posX posY  PosZ ] n'est pas dans liste renvoie -1
+to-report indiceItem [ PosX PosY PosZ liste]
+  let i 0
+  let noeud (list PosX PosY PosZ)
+
+  while [ i < (length liste) ]
+  [
+   let ligne item i liste
+   if item 0 ligne = noeud
+   [
+     report i
+   ]
+   set i  i + 1
+  ]
+  report -1
+end
+
+; Ajoute un nouveau noeud dans la liste d'adjacence
+to-report addListeAdj [ PosX PosY PosZ Liste]
+   if indiceItem PosX PosY PosZ Liste = -1
+   [
+     let noeud (list (list PosX PosY PosZ) [])
+     set Liste lput noeud Liste
+   ]
+   report Liste
+end
+
+; Renvoie les voisins de la liste correspondant à l'élement [ posX posY posZ]
+; Si l'élement [ posX posY  PosZ ] n'est pas dans liste renvoie -1
+to-report VoisinItem [ PosX posY posZ liste ]
+ let i 0
+  let noeud (list PosX PosY PosZ)
+
+  while [ i < (length liste) ]
+  [
+   let ligne item i liste
+   if item 0 ligne = noeud
+   [
+     report item 1 ligne
+   ]
+   set i  i + 1
+  ]
+  report -1
+end
+
+to-report addVoisins [ Liste PosX PosY PosZ NewVoisin ]
+  
+  ; Creation du noeud dans liste si il n'existait pas précédement
+    set Liste addListeAdj PosX PosY PosZ Liste
+    let indice indiceItem PosX PosY PosZ Liste
+    
+    let noeud (list PosX PosY PosZ)
+    
+    ;Obtention de la position dans la liste d'adjacence de chaque nouveau voisin
+    let VoisinPosition []
+    let i 0
+    while [ i < length(NewVoisin) ]
+    [
+     let aux item i NewVoisin
+     set VoisinPosition lput (list aux indiceItem item 0 aux item 1 aux item 2 aux Liste) VoisinPosition
+     set i i + 1 
+    ]
+    
+    ; Traitement des noeuds déjà presents la liste d'adjacence
+    set i 0
+    while [ i < length(VoisinPosition) ]
+    [
+     if item 1 item i VoisinPosition > -1
+     [ 
+       let v1 item 1 item item 1 item i VoisinPosition liste
+       let change false
+       if not member? noeud v1
+       [
+         set v1 lput noeud v1
+         set change true
+       ]
+       
+       if change
+       [
+         set liste replace-item  item 1 item i VoisinPosition liste (list item 0 item  item 1 item i VoisinPosition liste v1)      
+       ]
+     ]
+     set i i + 1 
+    ]
+    
+    ; Traitement des noeuds pas présents dans la liste d'adjacence
+     set i 0
+    while [ i < length(VoisinPosition) ]
+    [
+      if item 1 item i VoisinPosition = -1
+      [
+        set liste lput (list item 0 item i VoisinPosition (list noeud)) liste
+      ]
+     set i i + 1 
+    ]
+    
+    ; Taitement des voisins du noeud PosX PosY PosZ 
+    let v1 item 1 item indice liste
+    set i 0
+    while [ i < length(NewVoisin)]
+    [
+      if not member? item i NewVoisin v1
+      [ 
+        set v1 lput item i NewVoisin v1
+      ]
+      set i i + 1
+    ]
+    
+    set liste replace-item indice liste (list item 0 item indice liste v1) 
+    
+    
+    report liste
+end
+
+
+
+to-report fusionListe [ Liste Liste1 ]
+  let i 0
+  while [ i < length(Liste1) ]
+  [
+
+   let PosX item 0 item 0 item i Liste1
+   let PosY item 1 item 0 item i Liste1
+   let PosZ item 2 item 0 item i Liste1
+   let NewVoisin item 1 item i Liste1
+    
+
+   set Liste addVoisins  Liste PosX PosY PosZ NewVoisin
+
+   set i i + 1 
+  ]
+  report Liste
+end
+
+to-report parcoursEnLargeur [ Liste PosInitX PosInitY PosInitZ ]
+  set PosInitX round PosInitX
+  set PosInitY round PosInitY
+  set PosInitZ round PosInitZ
+  let noeud (list PosInitX PosInitY posInitZ)
+  ;print (list "noeud" noeud)
+  let file (list noeud)
+  let marquer (list noeud)
+  let pred (list (list noeud -1))
+    
+  while [ length(file) > 0 ]
+    [
+
+      set noeud first file
+      set file but-first file
+      let x round item 0 noeud
+      let y round item 1 noeud
+      let z round item 2 noeud
+   
+      let listeVoisin VoisinItem X Y Z liste 
+      
+      let i 0
+      while [ listeVoisin != -1 and i < length(listeVoisin) ]
+      [
+  
+        if not member? item i listeVoisin marquer
+        [
+       set marquer lput item i listeVoisin marquer
+       set file lput item i listeVoisin file
+       let x1 item 0 item i listeVoisin
+       let y1 item 1 item i listeVoisin
+       let z1 item 2 item i listeVoisin
+       if estDansPred x1 y1 z1 pred = false
+      [
+        set pred lput (list (list x1 y1 z1) (list x y z)) pred  
+      ]
+     ]
+     set i i + 1 
+   ]
+  ]
+  report pred
+end
+
+
+
+
+
+to-report estDansPred [ PosX PosY PosZ Pred ]
+  let noeud (list PosX PosY PosZ)
+  let i 0
+  while [ i < length(pred) ]
+  [
+    if noeud = item 0 item i pred
+    [
+      report true
+    ]
+   set i i + 1 
+  ]
+  report false
+end
+
+to-report plusCoursCheminReduit [ liste listeNoeudAEnlever ]
+  let fin false
+  while [ fin = false ]
+  [
+    let trouver false
+    let i 0
+    while [ trouver = false and i < length(liste) ]
+    [
+      if member? item 0 item i liste listeNoeudAEnlever
+      [
+        set liste remove-item i liste
+        set trouver true
+      ]
+      set i i + 1 
+    ]
+    if trouver = false
+    [
+      set fin true
+    ]
+  ]
+  report liste
+end
+
+
+to-report plusCourtChemin [ posFinalX posFinalY posFinalZ pred]
+  
+  if estDansPred PosFinalX PosFinalY PosFinalZ Pred = false
+  [
+ 
+  report []
+   
+  ]
+  let chemin []
+  let posX posFinalX
+  let posY posFinalY
+  let posZ posFinalZ
+  
+  let tailleInitPred length(pred)
+  let i 0
+  let fin? false
+  
+  while [ i < tailleInitPred and fin? = false]
+  [
+    set chemin lput (list posX posY posZ) chemin
+    let j 0
+    
+    while [ j < length(pred) and fin? = false]
+    [
+     if item 0 item 0 item j pred = posX and item 1 item 0 item j pred = posY and item 2 item 0 item j pred = posZ
+     [
+       
+      ifelse item 1 item j pred != -1
+      [
+        set posX item 0 item 1 item j pred 
+        set posY item 1 item 1 item j pred
+        set posZ item 2 item 1 item j pred
+      ]
+      [
+        set fin? true
+      ]
+      
+      set pred remove-item j pred
+     ] 
+      set j j + 1
+    ]
+    
+    set i i + 1
+  ]
+ 
+  report reverse chemin
+end
+
+to AfficheListeAdj [ liste ]
+  print "Début Liste Adjacence"
+  let i 0
+  while [ i < length(liste) ]
+  [
+    print  (list item 0 item i liste " -> " item 1 item i liste)
+    set i i + 1
+  ]
+  print "Fin liste Adjacence"
+
+end
+
+to-report EtendreListe [ liste ]
+  let i 0
+  while[ i < length(liste) ]
+  [
+   let pere item 0 item i liste
+   let voisin item 1 item i liste
+   let j 0
+   while[ j < length(voisin) ]
+   [
+     let enfant item j voisin
+     if indiceItem item 0 enfant item 1 enfant item 2 enfant liste = -1
+     [
+       set liste lput (list enfant (list pere)) liste
+     ]
+     set j j + 1
+   ]
+   
+   set i i + 1 
+  ]
+  report liste
+end
+
+to-report ListePatchConnue
+  let i 0
+  let listee [] 
+  while [ i < length(listeAdj) ]
+  [
+    set listee lput item 0 item i listeAdj listee
+    set i i + 1
+  ] 
+  report listee
+end
+
+to-report PlusCoursCheminFinal [ Liste PosInitX PosInitY PosInitZ posFinalX posFinalY posFinalZ ]
+  let element plusCourtChemin posFinalX posFinalY posFinalZ parcoursEnLargeur Liste PosInitX PosInitY PosInitZ
+  if length(element) > 0 [
+    ;print "element>0"
+    report element
+  ]  
+  let local []
+  if breed = Convois [
+   ; print "chercherlocal"
+   let distancee  ConvoiDistanceObservable  - 1
+    set local PatchPlusProcheLeader (list  posFinalX posFinalY posFinalZ)  distancee 
+    AgentDansCercleV2  round xcor round ycor round zcor "Convoi" true 
+  
+  
+  ]
+  if breed = Ennemis [
+    let distancee   EnnemiDistanceObservable   - 1
+   set local PatchPlusProcheLeader (list  posFinalX posFinalY posFinalZ)  distancee 
+   
+     AgentDansCercleV2  round xcor round ycor round zcor "Ennemi" true 
+ 
+  ]
+  if breed = Drones [
+    let distancee  DroneDistanceObservable   - 1
+   set local PatchPlusProcheLeader (list  posFinalX posFinalY posFinalZ)  distancee
+ 
+    AgentDansCercleV2  round xcor round ycor round zcor "Drone" true 
+ 
+  ]
+  
+  if length(local) > 0 [
+    
+    set element plusCourtChemin item 0 local item 1 local item 2 local parcoursEnLargeur Liste PosInitX PosInitY PosInitZ
+   
+    report element
+  ]
+  report []
+end

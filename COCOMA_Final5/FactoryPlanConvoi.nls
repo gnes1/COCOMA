@@ -1,0 +1,458 @@
+to AvanceVersObjectifConvoi [ local? local suiveur]
+  ifelse local?
+  [
+    AvanceVersObjectifLocalConvoi local suiveur
+  ]
+  [
+    AvanceVersObjectifPrincipalConvoi suiveur
+  ]
+end
+
+to AvanceVersObjectifLocalConvoi [ local suiveur]
+  if leader? 
+  [
+    let chemin as-path
+    set local PatchPlusProcheLeader  local  ConvoiDistanceObservable
+     ;print (list "who" who "pointlocal" local "suiveur" suiveur)
+     ifelse length(local) > 0 [
+    let liste PlusCoursCheminFinal  ListeAdj round xcor round ycor round zcor round item 0 local round item 1 local round item 2 local 
+    let i 0
+    let p []
+    while [ i < ConvoiDecision ]
+    [
+      if i < length(liste)
+      [
+        set p lput item i liste p
+      ]
+     set i i + 1 
+    ]
+    suivrePath liste 0.001
+     ]
+     [
+          ;print (list "cas2Suivre" who )
+    ifelse member? (list round xcor round ycor round zcor) chemin [
+    ;  print (list "mapositiofaitpartieduastar" (list xcor ycor zcor))
+      let indice 0
+    let z 0
+    let cheminFinale []
+    while [ z < length(chemin) ]
+    [
+      if (list round xcor round ycor round zcor) = item z chemin [
+        set indice z
+      ]
+      set z z + 1
+    ]
+    set z indice
+    while [ z < length(chemin) ]
+    [
+      set cheminFinale lput item z chemin cheminFinale
+      set z z + 1
+    ]
+  ;  print cheminFinale
+    suivrepath cheminFinale 0.001
+    ]
+     [
+   ; print "jesuisloinduastar"
+   let patcheproche PatchPlusProcheLeaderListe chemin ConvoiDecision
+  ; print (list "plucproche" who patcheproche)
+   let liste PlusCoursCheminFinal listeAdj round xcor round ycor round zcor round item 0 patcheproche round item 1 patcheproche item 2 patcheproche
+    set zcor round zcor
+    suivrepath liste 0.0010
+  
+     ]
+      
+       
+     ]
+    let ag convois with [ member? who suiveur ]
+    ask ag 
+    [
+      
+      set zcor round zcor
+      Suivre leader "Convoi"
+    ]
+  ]
+end
+
+
+
+to AvanceVersObjectifPrincipalConvoi [ suiveur ]
+ ; print (list "jesuisleader" leader)
+  let i 0
+  let cheminFinale []
+  let indice -1
+  let chemin as-path
+  if leader = who
+  [
+     set chemin as-path
+     while [ i < length(chemin) ] 
+    
+[
+       if (list round xcor round ycor round zcor ) = item i chemin [
+        set indice i  
+       ]
+       set i i + 1
+    ]    
+  ;  print (list "indiceleader" indice)
+    if indice != -1 [
+      set i indice 
+      while [ i < length(chemin) ]
+      [
+       set cheminFinale lput item i chemin cheminFinale
+       set i i + 1 
+      ]
+       suivrepath  cheminFinale 0.0010
+    ]
+    if indice = -1 [
+      
+      let local PatchPlusProcheLeaderListe chemin  ConvoiDistanceObservable
+      let liste PlusCoursCheminFinal  ListeAdj round xcor round ycor round zcor round item 0 local round item 1 local round item 2 local 
+    suivrepath liste 0.0010
+    
+        ; let liste PlusCoursCheminFinal  ListeAdj round xcor round ycor round zcor round item 0 patchObjectif round item 1 patchObjectif round item 2 patchObjectif 
+   
+    ; print (list who "chemin" liste)
+    ;let i 0
+    ;let p []
+   ;suivrePath  liste  0.001
+  ]
+  ]
+   let ag convois with [ member? who suiveur ]
+   ask ag 
+    [
+      set zcor round zcor
+      Suivre leader "Convoi"
+    ]
+  
+end
+
+to AppelDetresseEnnemiEnVueVersionConvoi
+  envoieMessageDetresse listeDroneAPorteeCommunication listeEnnemiAPorteePerception
+end
+
+to AppelDetresseRessourceConvoi
+  envoieMessageDetresseRessource listeDroneAPorteeCommunication (list xcor ycor zcor)
+end
+
+to LeurreConvoi
+  let ennemiposition []
+  let hea 0
+  if length(listeEnnemiAPorteePerception) > 0 [
+    ask ennemi item random length(listeEnnemiAPorteePerception) listeEnnemiAPorteePerception [
+      set ennemiposition (list xcor ycor zcor)
+      set hea heading
+    ]
+    let distancee distancexy item 0 ennemiposition item 1 ennemiposition
+    set distancee distancee / 2
+    let patchchoisi patch-at-heading-and-distance (hea - heading) distancee
+    ;print patchchoisi
+    ask patchchoisi [
+      set patchchoisi (list pxcor pycor pzcor)
+    ]
+     AvanceVersObjectifLocalConvoi  patchchoisi []
+  ]
+end
+
+to Ravitaillement 
+   let liste ListeBasePatchHangar
+   
+  let i 0
+  let l []
+  while [ i < length(liste) ]
+  [
+    if indiceItem  item 0 item i liste item 1 item i liste 1 listeAdj = -1
+    [
+      set l lput item i liste l 
+    ]
+   set i i + 1
+  ]
+  
+  set i 0
+  while [ i < length(l) ]
+  [
+    set liste remove item i l liste 
+    set i i + 1
+  ]
+ ; print length(liste)
+  let patche item random length(liste) liste
+  set patche lput 1 patche
+  AvanceVersObjectifLocalConvoi patche []
+  
+  set essenceActuel essenceMax
+  set  DetresseRessource? false
+ 
+ 
+end
+
+
+to  playPlanConvoi [action]
+  
+  if leader = who and PremiereFois = true [
+   ; print (list "leadermoi" who )
+    
+    while [ length(listeConvoiAPorteePerception) = 0 ][
+   ;   print "je vous attend"
+    ]
+  ]
+  
+  if action = "Ravitaillement" ;ok
+  [
+    set PremiereFois false
+    Ravitaillement
+  ]
+  if action = "AppelDetresse" ; ok
+  [
+    set PremiereFois false
+    AppelDetresseEnnemiEnVueVersionConvoi
+  ]
+  if action = "LireMessage" ; ok
+  [
+    set PremiereFois false
+    LireMessage 1
+  ]
+  if action = "Arrete" ; ok
+  [
+    set PremiereFois false
+    Sarreter 1
+  ]
+  if action = "AllezObjectif"
+  [
+    
+    ifelse leader = who [
+      set PremiereFois false
+      ;print (list "jesuisleleader" who)
+      let suiveur listeConvoiAPorteePerception 
+     ; print (list "voicimessuiveur" suiveur)
+     ;print (list "leaderjechoisimesuiveur" who suiveur )
+      AvanceVersObjectifConvoi false [] suiveur
+    ]
+    [
+     ; print (list "pasleadeur" who)
+       Suivre leader "Convoi"
+    ]
+    ]
+  
+  if action = "Evitement"; ok
+  [
+    set PremiereFois false
+    Evitement
+  ]
+  if action = "Dispersion"; ok
+  [
+    set PremiereFois false
+    Dispersion  
+  ]
+  if action = "Leurre" ;ok
+  [
+    set PremiereFois false
+    LeurreConvoi
+  ]
+   if action = "AppelDetresseRessource" ;ok
+  [
+    set PremiereFois false
+    AppelDetresseRessourceConvoi
+  ]
+  if action = "MiseAJourCarteSolo"
+  [
+    MiseAjourCarteSoloConvoi
+  ]
+end
+
+
+;------------------------------------------------------------------------------
+to Dispersion 
+  ifelse length(listeConvoiAPorteePerception) > 0
+   [
+     DispersionGroup CreerPointRalliement
+   ]
+   [
+     DispersionSolo
+   ]
+  
+end
+
+to DispersionGroup [posNewObj]
+  InitialisationDispersionGroup
+  ChoixPartenaireGroup
+  ConvoiElectionLeader true posNewObj
+   
+ ;   if leader? = true
+  ;[
+   ; print "la"
+   if length(listeEnnemiAPorteePerception) > 0
+   [
+    ; print "angle"
+   let angle ChoixAngleDispersionSolo round [xcor] of turtle item 0 listeEnnemiAPorteePerception round [ycor] of turtle item 0 listeEnnemiAPorteePerception round [zcor] of turtle item 0 listeEnnemiAPorteePerception  
+   let liste NouveauListAdj angle
+   suivrePath liste 0.001
+   ;]
+  ]
+  
+end
+
+;;Stragtegie a  adopter pour la dispersion si le nombreAgentLeader < = 3
+to DispersionSolo
+  ifelse LeaderVivant? = true 
+  [
+    
+    if leader? = true [
+      ;print (list "rentrer" who)
+    ;;Envoyer un message aux suiveurs du point de ralliement
+      set PointDeRalliement CreerPointRalliement 
+      ;print (list "ralliement" PointDeRalliement)
+      envoieMessagePointRalliement listeConvoiAPorteeCommunication
+    ]
+  ]
+  [   
+     set PointDeRalliement (list xcor ycor zcor)
+  ]
+  
+  envoieMessageDetresse listeDroneAPorteeCommunication (list xcor ycor zcor)
+  ;Determiner l'angle selon l'ennemi le plus pret
+;  print listeEnnemiAPorteePerception
+  if length(listeEnnemiAPorteePerception) > 0
+  [
+    let angle ChoixAngleDispersionSolo [xcor] of turtle item 0 listeEnnemiAPorteePerception [ycor] of turtle item 0 listeEnnemiAPorteePerception [zcor] of turtle item 0 listeEnnemiAPorteePerception  
+  ; print angle
+    let liste NouveauListAdj angle
+    suivrePath liste 0.0001
+  ]
+end
+
+to-report CreerPointRalliement 
+  report (list round xcor round ycor round zcor)
+end
+
+to-report ChoixAngleDispersionSolo [EnnemisPosX EnnemisPosY EnnemisPosZ]
+  let angle random 360
+  
+  let difX abs (xcor - EnnemisPosX)
+  let difY abs ( ycor - EnnemisPosY)
+  if difX = 0 [
+    ifelse xcor > EnnemisPosX
+    [
+      set angle random 90
+    ]
+    [
+      set angle random -90
+  ]
+  ]
+    if difY = 0 [
+    ifelse xcor > EnnemisPosX
+    [
+      set angle random  ((random 100 / 100) mod (-45 - (-90) + 1) + 90)
+    ]
+    [
+      set angle random ((random 100 / 100) mod (-45 - (-90) + 1) + 90)
+  ]
+    ]
+  report angle
+end
+
+;;;DÃ©termine le point de ralliement
+to  InitialisationDispersionGroup
+   ifelse  LeaderVivant? = true 
+  [
+    if leader? = true [
+    ;;Envoyer un message aux suiveurs du point de ralliement
+      set PointDeRalliement CreerPointRalliement 
+      envoieMessagePointRalliement listeConvoiAPorteePerception
+    ]
+  ]
+  [   
+     set PointDeRalliement (list round xcor round ycor round zcor)
+  ]
+end
+
+;;;Choisir les suiveurs
+to  ChoixPartenaireGroup
+  let liste  ListeAgentPlusProcheDuLeader listeConvoiAPorteePerception
+  ;print (list "VoilaLalisteDesAgentsPlusProche" who liste )
+  envoieMessageConfirmation liste who
+end
+
+to-report ListeAgentPlusProcheDuLeader [ ListeAg ]
+  report sort-by [ compareDistanceAgent? ?1 ?2  ] ListeAg
+end
+
+to-report compareDistanceAgent? [ Ag1 Ag2 ]
+  let  x1 abs (([xcor] of turtle Ag1  - xcor) + abs ([ycor] of turtle Ag1 - ycor) + abs ([zcor] of turtle Ag1 - zcor))
+  let  x2 abs (([xcor] of turtle Ag2 - xcor) + abs ([ycor] of turtle Ag2 - ycor) + abs ([zcor] of turtle Ag2 - zcor) )
+  report x1 < x2
+end
+
+
+to ModifierCheminVersPointDeRalliement 
+  let pred parcoursEnLargeur  listeAdj xcor ycor zcor
+  let path []
+  set path plusCourtChemin item 0 item 1 PointDeRalliement item 1 item 1 PointDeRalliement  item 2 item 1 PointDeRalliement pred
+  suivrePath path 0.01
+end
+
+;;Appeler par le leader? Comment gerer les suiveurs? Faut il pas voir le plus pret?
+to ModifierCheminfuiteConvoi
+  let ennemiPlusProche CalculDistanceMinList listeEnnemiAPorteePerception "Convoi"
+  let angle ChoixAngleDispersionSolo [xcor] of turtle ennemiPlusProche [ycor] of turtle ennemiPlusProche [zcor] of turtle ennemiPlusProche  
+  
+  let liste NouveauListAdj angle
+  suivrePath liste 0.0001
+end
+
+to ConvoiElectionLeader [Separation? posNewObj]
+  let Agent []
+  if LeaderVivant? = false 
+  [
+    electionLeaderRandom 
+  ]
+  if Separation? = true
+  [
+    ;set objectifLocal posNewObj
+    set Agent ChoixLeaderPlusProche  listeConvoiAPorteePerception
+    ifelse [who] of turtle Agent = who 
+    [
+      set leader? true 
+      set leader Agent 
+      envoieMessageConfirmation listeConvoiAPorteeCommunication who
+    ] 
+    [
+      set leader? false
+      set leader Agent
+      set LeaderVivant? true
+      envoieMessageConfirmation listeConvoiAPorteeCommunication [who] of turtle Agent
+    ]
+  ]
+end
+
+;;Choisir le leader en random
+to electionLeaderRandom
+  let aux random 100
+  set CleCryptageLeaderRandom random 100
+  let somme aux + CleCryptageLeaderRandom
+  envoieElectionRandomLeaderSomme somme listeConvoiAPorteeCommunication
+  set NbAgentParticipantElectionRandom length(listeConvoiAPorteeCommunication)
+end 
+
+
+;;Choisir le leader par rapport Ã  la distance
+to-report ChoixLeaderPlusProche [ listeAgent] ;ok
+  let dis 1E17
+  let i 0
+  let indice 0
+  while [ i < length(listeAgent) ]
+  [
+    let val abs (([xcor] of turtle item i listeAgent - xcor)) + abs (([ycor] of turtle item i listeAgent - ycor))
+    if dis > val [
+      set indice i
+      set dis val
+    ]
+    set i i + 1
+  ]
+  if length(listeAgent) > 0 [
+  report item indice listeAgent
+  ]
+  report 0
+  
+end
+
+to MiseAjourCarteSoloConvoi
+  AgentDansCercleV2 xcor ycor zcor "Convoi" true 
+end

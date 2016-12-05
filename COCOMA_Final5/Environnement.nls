@@ -1,0 +1,312 @@
+;Creer et stocke une matrice de nombres [0, 140] representant les couleurs des patches
+;et le stock dans la variable globale mapNumerique
+to carteNumericColorPatches
+  set mapNumerique []
+  
+  let result []
+  let i min-pxcor
+  let j min-pycor
+  let max-pcorx max-pxcor + 1 
+  let max-pcory max-pycor + 1 
+  while [i < max-pcorx  ]
+  [
+    let tab []
+    while [j < max-pcory ]
+    [
+     ask patch i j 0 [ set tab lput pcolor tab ]
+
+     set j (j + 1)
+    ]
+   set result lput tab result
+   set j min-pycor
+   set i (i + 1)
+  ]
+  set mapNumerique result
+  updateBooleanEnvironnement
+end
+
+;Revoie le nom de l'environnement en fonction du pcolor d'un patch contenu dans mapNumerique
+to-report environnementPatch [ i j ]
+  
+  let val item j item i mapNumerique
+  if (val > 51 and val  <= 59) or (val > 61 and val <= 69) [ report "Herbe" ]
+  if val > 101 and val <= 109 [ report "Eau" ]
+  if val > 31  and val <= 39 and val != 35 [ report "Montagne" ]
+  if val = 35 [ report "Pont" ]
+  if val = 3  [ report "Base" ] ;grey
+  if val = 1  [ report "Base" ] ;black
+  if val = 8  [ report "Base" ] ;light grey
+  if val = 45 [ report "Arrive" ] ;yellow
+  report "Autre"
+end
+
+
+to trouverObjectif
+  let i 0
+  while [ i < max-pxcor ]
+  [
+    let j 0
+    while [ j < max-pycor ]
+    [
+      ask patch i j mapAlt
+      [
+        if objectif?
+        [
+          set patchObjectif (list i j mapAlt)
+        ]
+      ]
+      set j j + 1
+    ]
+    set i i + 1
+  ]
+end
+
+to updateBooleanEnvironnement
+ let i 0
+ while [ i < length(mapNumerique)]
+ [
+  let j 0
+  while [ j < length(item i mapNumerique) ]
+  [
+   let typePatch environnementPatch i j 
+   ask patch i j 0 
+   [
+    if typePatch = "Herbe"
+    [
+      set obstacle? false
+      set base? false
+      set hangar? false
+      set bridge? false
+      set montagne? false
+      set riviere? false
+    ]
+    if typePatch = "Eau"
+    [
+      set obstacle? true
+      set base? false
+      set hangar? false
+      set bridge? false
+      set montagne? false
+      set riviere? true
+    ]
+    if typePatch = "Montagne"
+    [
+      set obstacle? true
+      set base? false
+      set hangar? false
+      set bridge? false
+      set montagne? true
+      set riviere? false
+    ]
+    if typePatch = "Pont"
+    [
+      set obstacle? false
+      set base? false
+      set hangar? false
+      set bridge? true
+      set montagne? false
+      set riviere? false
+    ]
+    if typePatch = "Base"
+    [
+      set obstacle? true
+      set base? true
+      set hangar? true
+      set bridge? false
+      set montagne? false
+      set riviere? false
+    ]
+    if typePatch = "Arrive" or typePatch = "Autre"
+    [
+      set obstacle? false
+      set base? false
+      set hangar? false
+      set bridge? false
+      set montagne? false
+      set riviere? false
+    ]
+   ]
+   
+   ask patch i j 1
+   [
+    if typePatch = "Herbe"
+    [
+      set obstacle? false
+      set base? false
+      set hangar? false
+      set bridge? false
+      set montagne? false
+      set riviere? false
+    ]
+    if typePatch = "Eau"
+    [
+      set obstacle? true
+      set base? false
+      set hangar? false
+      set bridge? false
+      set montagne? false
+      set riviere? true
+    ]
+    if typePatch = "Montagne"
+    [
+      set obstacle? true
+      set base? false
+      set hangar? false
+      set bridge? false
+      set montagne? true
+      set riviere? false
+    ]
+    if typePatch = "Pont"
+    [
+      set obstacle? false
+      set base? false
+      set hangar? false
+      set bridge? true
+      set montagne? false
+      set riviere? false
+    ]
+    if typePatch = "Base"
+    [
+      set obstacle? true
+      set base? true
+      set hangar? true
+      set bridge? false
+      set montagne? false
+      set riviere? false
+    ]
+    if typePatch = "Arrive" or typePatch = "Autre"
+    [
+      set obstacle? false
+      set base? false
+      set hangar? false
+      set bridge? false
+      set montagne? false
+      set riviere? false
+    ]
+   ]
+   set j j + 1 
+  ]
+  set i i + 1 
+ ]
+end
+
+;;;Distance entre deux patches
+to-report voisinDirect3D [ x y z x1 y1 z1 ]
+  let diffX abs(x - x1)
+  let diffY abs(y - y1)
+  let diffZ abs(z - z1)
+  if (diffX = 0 or diffX = 1) and (diffX = 0 or diffX = 1) and (diffX = 0 or diffX = 1) and (diffX + diffY + diffZ) < 4
+  [
+    report true
+  ]
+  report false
+end
+
+to-report FaceVoisin [ x y z]
+  let faceX false
+  let faceY false
+  let faceZ false
+  
+  let centerX false
+  let centerY false
+  let centerZ false
+  
+  if  x = min-pxcor or x = max-pxcor
+  [
+    set centerX true
+  ]
+  
+  if  y = min-pycor or y = max-pycor
+  [
+    set centerY true
+  ]
+  
+  if  z = min-pzcor or z = max-pzcor
+  [
+    set centerZ true
+  ]
+  
+  if (not centerX and not centerY and centerZ) or (not centerX and centerY and not centerZ) or (centerX and  not centerY and not centerZ) 
+  [
+    report 9
+  ]
+  
+  if (centerX and not centerY and centerZ) 
+  or (centerX and centerY and not centerZ) 
+  or (not centerX and centerY and centerZ)
+  [
+    report 3
+  ]
+  
+  if  (x - 1) = min-pxcor or (x + 1) = max-pxcor
+  [
+    set faceX true
+  ]
+  
+  if  (y - 1) = min-pycor or (y + 1) = max-pycor
+  [
+    set faceY true
+  ]
+  
+  if  (z - 1) = min-pzcor or (z + 1) = max-pzcor
+  [
+    set faceZ true
+  ]
+  
+  if faceX and faceY and faceZ
+  [
+   report 7
+  ]
+  
+  if faceX and faceY and not faceZ
+  [
+   report 11 
+  ]
+  
+  if faceX and not faceY and faceZ
+  [
+   report 11 
+  ]
+  
+  if not faceX and faceY and faceZ
+  [
+   report 11 
+  ]
+  
+  if faceX and not faceY and not faceZ
+  [
+   report 17  
+  ]
+  
+  if not faceX and faceY and not faceZ
+  [
+   report 17
+  ]
+  
+  if not faceX and not faceY and faceZ
+  [
+   report 17
+  ]
+  
+  report 26
+end
+
+to-report ListeBasePatchHangar
+  let liste []
+  let i 0
+  while [i < length(mapNumerique)]
+  [
+    let j 0
+    let aux item i mapNumerique
+    while [j < length(aux)]
+    [
+      if environnementPatch i j = "Base"
+      [
+        set liste lput (list i j) liste
+      ]
+      set j j + 1 
+    ] 
+    set i i + 1
+  ]   
+  report liste   
+end

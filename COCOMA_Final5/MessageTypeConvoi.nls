@@ -1,0 +1,119 @@
+; Traitement des messages reçus et stockés dans la boite à lettre
+; Envoie automatique d'un accuser de reception pour tous messages n'étant pas un accusé de reception
+to receptionMessageConvoi
+  if length(boiteAlettre) > 0
+  [
+  let m first(boiteALettre)
+  set boiteAlettre but-first(boiteALettre)
+  
+  let typeMessage item 0 m
+  if typeMessage = 0
+  [ print "Accuser de reception" ]
+  if typeMessage = 1
+  [ print "Message"
+     if item 1 m = "Point Ralliement"
+     [
+       set PointDeRalliement item 3 m
+       ModifierCheminVersPointDeRalliement
+     ]
+     
+   
+     if item 1 m = "Je suis le nouveau leader"
+     [
+       set LeaderVivant? true
+       set leader item 3 m
+       set leader?  true
+     ]
+     if item 1 m = "Election random leader somme"
+     [
+       set listeElectionRandomSomme lput (list item 2 m item 3 m) listeElectionRandomSomme
+       if length (listeElectionRandomSomme) = NbAgentParticipantElectionRandom
+       [
+         envoieElectionRandomLeaderKey  CleCryptageLeaderRandom (list item 2 m) 
+       ]
+     ]
+     
+      if item 1 m = "Je suis mort"
+     [
+      if leader = item 3 m 
+      [
+        set leader? false
+        set leader -1 
+        set leaderVivant? false
+        ]
+      
+     ]
+     
+     
+     
+     if item 1 m = "Election random leader key"
+     [
+       set listeElectionRandomKey lput (list item 2 m item 3 m) listeElectionRandomKey
+       if length (listeElectionRandomKey) = NbAgentParticipantElectionRandom
+       [
+         let i 0
+         let minnie 1E17 
+         let posMinnie -1
+         while [ i < length(listeElectionRandomKey) ]
+         [
+           if item 1 item i listeElectionRandomKey < minnie
+           [
+             set minnie item 1 item i listeElectionRandomKey
+             set posMinnie i
+           ]
+           set i i + 1 
+         ]
+         set leader item 0 item posMinnie listeElectionRandomKey
+         set leaderVivant? true
+         set listeElectionRandomKey []
+         set listeElectionRandomSomme []
+      ]
+     ]
+     if item 1 m = "Besoin de ressources"
+     [
+       let pos item 3 m
+       ;A remplir quand objectif is ready
+     ]
+     if item 1 m = "Mise a jour de la carte"
+     [
+       set listeAdj fusionListe  listeAdj item 3 m
+     ]
+    if aPorteeCommunication item 2 m  ; expéditeur
+    [ envoyerMessage 0 item 1 m  item 4 m "" false ]
+  ]
+  ]
+end
+
+;;;;Message à envoyer aux convois pour y aller pour rejoindre son groupe après dispersion
+to envoieMessagePointRalliement [destinataire]
+   envoyerMessage 1 "Point Ralliement" destinataire (list leader PointDeRalliement) true
+end
+;
+;;;Envoie message pour signaler ennemis en vue
+to envoieMessageDetresse [destinataire posAgent]
+    envoyerMessage 1 "Ennemis En vus" destinataire posAgent false
+end
+;
+;;;Envoie du messages pour informer les voitures qu'ils ont un leader 
+to envoieMessageConfirmation [destinataire nomleader]
+  envoyerMessage 1 "Je suis le nouveau leader" destinataire  nomleader true
+end
+;
+;;;Elire un leader en random
+to envoieElectionRandomLeaderSomme [ somme destinataire ]
+   envoyerMessage 1 "Election random leader somme" destinataire  somme true
+end
+
+;Envoyé le numéro choisi par les agents
+to envoieElectionRandomLeaderKey [ key destinataire ]
+   envoyerMessage 1 "Election random leader key" destinataire  key true
+end
+
+to envoieMessageDetresseRessource  [destinataire posAgent]
+  envoyerMessage 1 "Besoin de ressources" destinataire posAgent true
+end
+
+;Partage de la carte
+to envoieMessageFusionCarte [destinataire]
+  envoyerMessage 1 "Mise a jour de la carte" destinataire listeAdj false
+end

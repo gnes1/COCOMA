@@ -1,0 +1,99 @@
+;;;Generer la trajectoire de la balle
+to createRoquette [posX posY posZ head pitching porteeBullet id ]
+    hatch-bullets 1
+    [
+      set color blue
+      set xcor posX
+      set ycor posY
+      set zcor posZ
+      set heading head
+      set pitch pitching
+      set portee porteeBullet
+      set idturtlelanceur id
+    ]
+end
+
+;;;Detruire la balle a l'arrivee
+to detruireRoquette [ posX posY posZ]
+  ask bullets [
+    if xcor = posX and ycor = posY and zcor = posZ
+    [ die ]
+  ]
+end
+
+;;;;Envoie une balle vers l'ennemi
+To CreerRequete [ posX posY posZ head pitching porteeBullet]
+  createRoquette posX posY posZ head pitching porteeBullet who
+ ask bullets [
+  let i 0
+  while [ i < portee ]
+  [
+   let j 0
+   while [ j < 90 ]
+   [
+     wait 0.01
+     forward ( 1 / 90)
+     set j j + 1
+   ]
+   gestionBalle
+   set i i + 1 
+  ]
+  die
+ ]
+end
+
+to gestionBalle 
+  let x round xcor
+  let y round ycor
+  let z round zcor
+  let toucher false
+ 
+  let listeturtle turtles-on patch x y z 
+  if not toucher and any? listeturtle and count(listeturtle) > 1 
+  [
+    if idturtlelanceur != who [
+      ask turtles-on patch x y z [
+        if breed != bullets and breed != waypoints[
+          set PV PV - 1 
+          if PV = 0 [ die ] ] ]
+      set toucher true
+    ]
+  ]
+  if toucher [ die ]
+end
+
+to-report DetermineHeading [ x y ]
+  let oldHead heading
+  let oldPitch pitch
+  facexy x y
+  let newHead heading
+  set heading oldHead
+  set pitch oldPitch
+;  if oldHead = 0
+;  [
+;   set oldHead 360 
+;  ]
+  
+  ;print (list oldPitch newHead abs( (360 - oldHead) - (360 - newHead)))
+;  if abs((360 - oldHead) - (360 - newHead)) <= 45
+;  [
+;    report newHead
+;  ]
+  report newHead
+end
+
+to-report DeterminePitching [ x y z ]
+  let AB abs(xcor - x) + abs (ycor - y) ;x 
+  
+  let BC abs (zcor - z)
+  let direction calculangle AB BC
+  report direction
+end
+to-report calculangle [AB BC]
+  let valueAB AB * AB
+  let valueBC BC * BC
+  let value valueAB + valueBC
+  let valueAC sqrt(value)
+  report asin(BC / valueAC)
+  
+end

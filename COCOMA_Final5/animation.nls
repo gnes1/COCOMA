@@ -1,0 +1,667 @@
+
+;;Fonction qui lance l'animation
+;; x et y sont les positions initiales
+;; x1 et y1 sont les coordonnées du patch voisin au patch x y
+;; speedy est la vitesse de l'animation
+to changePatchAnim [ x y z x1 y1 speedy]
+  let diffPosX x - x1 
+  let diffPosY y - y1
+  
+  
+   if diffPosX != 0 or diffPosY != 0
+   [
+     ; (-1, -1)
+     if diffPosX = -1 and diffPosY = -1
+     [
+       changePatchAnim_1_1 x y speedy
+     ]
+     
+     ; (-1, 0)
+     if diffPosX = -1 and diffPosY = 0
+     [
+       changePatchAnim_10 x y speedy
+     ]
+
+     ; (-1, 1)
+     if diffPosX = -1 and diffPosY = 1
+     [
+       changePatchAnim_11 x y speedy
+     ]
+     
+     ; (0, -1)
+     if diffPosX = 0 and diffPosY = -1
+     [
+       changePatchAnim0_1 x y speedy
+     ]
+     
+     ; (0, 1)
+     if diffPosX = 0 and diffPosY = 1
+     [
+       changePatchAnim01 x y speedy
+     ]
+     
+     ; (1, -1)
+     if diffPosX = 1 and diffPosY = -1
+     [
+       changePatchAnim1_1 x y speedy
+     ]
+
+     ; (1, 0)
+     if diffPosX = 1 and diffPosY = 0
+     [
+       changePatchAnim10 x y speedy
+     ]
+
+     ; (1, 1)
+     if diffPosX = 1 and diffPosY = 1
+     [
+       changePatchAnim11 x y speedy
+       
+     ]
+     
+     reajustePosition  speedy 
+  
+     reajusteHeading
+     set xcor round xcor
+     set ycor round ycor
+   ]
+end
+
+;;;Renvoie l'ecart entre la voiture et le prochain patch
+to-report angleRotationPatch [ angleInit dirX dirY ]
+  let angleVoulu 1E17
+  let ecartVoulu 0
+
+  ; (-1, -1)
+  if dirX = -1 and dirY = -1
+  [
+    set angleVoulu 315
+  ]
+
+  ; (-1, 0)
+  if dirX = -1 and dirY = 0
+  [
+    set angleVoulu 270
+  ]
+
+  ; (-1, 1)
+  if dirX = -1 and dirY = 1
+  [
+    set angleVoulu 225
+  ]
+
+  ; (0, -1)
+  if dirX = 0 and dirY = -1
+  [
+    set angleVoulu 0
+  ]
+
+  ; (0, 1)
+  if dirX = 0 and dirY = 1
+  [
+    set angleVoulu 180
+  ]
+
+  ; (1, -1)
+  if dirX = 1 and dirY = -1
+  [
+    set angleVoulu 45
+  ]
+
+  ; (1, 0)
+  if dirX = 1 and dirY = 0
+  [
+    set angleVoulu 90
+  ]
+
+  ; (1, 1)
+  if dirX = 1 and dirY = 1
+  [
+    set angleVoulu 135
+  ]
+
+  set ecartVoulu abs(angleInit - angleVoulu)
+
+  if angleVoulu = 1E17
+  [
+    set ecartVoulu 360
+  ]
+  
+  report ecartVoulu
+end
+
+
+;;Gérer tous les differents possibles patch 
+to changePatchAnim11 [ x y speedy ] 
+  ;print "(1, 1)"
+  let diffangle angleRotationPatch heading 1 1
+  let head heading
+ ; print (list "head" head)
+  
+  if head = 0
+  [
+    tourneRight 45 speedy 
+    reculer 125 speedy 
+  ]
+  
+  if head = 45
+  [
+    reculer 125 speedy 
+  ]
+  
+  if head = 90
+  [
+    tourneLeft 45 speedy 
+    reculer 125 speedy 
+  ]
+  
+  if head = 135
+  [
+    tourneRight 90 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 180
+  [
+    tourneRight 45 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 225
+  [
+    avancer 125 speedy 
+  ]
+  
+  if head = 270
+  [
+    tourneLeft 45 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 315
+  [
+    tourneLeft 90 speedy 
+    avancer 125 speedy 
+  ]
+end
+
+to changePatchAnim10 [ x y speedy ] ; ok
+ ; print "(1, 0)"
+  let diffangle angleRotationPatch heading 1 0
+  let head heading
+ ; print (list "head" head)
+  if head = 0
+  [
+    tourneLeft 90 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 45
+  [
+    tourneRight 45 speedy 
+    reculer 90 speedy 
+  ]
+  
+  if head = 90
+  [
+    reculer 90 speedy 
+  ]
+  
+  if head = 135
+  [
+    tourneLeft 45 speedy 
+    reculer 90 speedy 
+  ]
+  
+  if head = 180
+  [
+    tourneLeft 90 speedy 
+    reculer 90 speedy 
+  ]
+  
+  if head = 225
+  [
+    tourneRight 45 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 270
+  [
+    avancer 90 speedy 
+  ]
+  
+  if head = 315
+  [
+    tourneLeft 45 speedy 
+    avancer 90 speedy 
+  ]
+end
+
+to changePatchAnim1_1 [ x y speedy ] ; ok
+ ; print "(1, -1)"
+  let diffangle angleRotationPatch heading 1 -1
+  let head heading
+  ;print (list "head" head)
+  if head = 0
+  [
+    tourneLeft 45 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 45
+  [
+    tourneLeft 90 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 90
+  [
+    tourneRight 45 speedy 
+    reculer 125 speedy 
+  ]
+  
+  if head = 135
+  [
+    reculer 125 speedy 
+  ]
+  
+  if head = 180
+  [
+    tourneLeft 45 speedy 
+    reculer 125 speedy 
+  ]
+  
+  if head = 225
+  [
+    tourneRight 90 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 270
+  [
+    tourneRight 45 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 315
+  [
+    avancer 125 speedy 
+  ]
+end
+
+to changePatchAnim01 [ x y speedy ] ; ok
+ ; print "(0, 1)"
+  let diffangle angleRotationPatch heading 0 1
+  let head heading
+ ; print (list "head" head)
+  if head = 0
+  [
+    reculer 90 speedy 
+  ]
+  
+  if head = 45
+  [
+    tourneLeft 45 speedy 
+    reculer 90 speedy 
+  ]
+  
+  if head = 90
+  [
+    tourneRight 90 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 135
+  [
+    tourneRight 45 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 180
+  [
+    avancer 90 speedy 
+  ]
+  
+  if head = 225
+  [
+    tourneLeft 45 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 270
+  [
+    tourneLeft 90 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 315
+  [
+    tourneRight 45 speedy 
+    reculer 90 speedy 
+  ]
+end
+
+to changePatchAnim0_1 [ x y speedy ] ;ok
+ ; print "(0, -1)"
+  let diffangle angleRotationPatch heading 0 -1
+  let head heading
+  ;print (list "head" head)
+  if head = 0
+  [
+    tourneRight 0 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 45
+  [
+    tourneLeft 45 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 90
+  [
+    tourneLeft 90 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 135
+  [
+    tourneRight 45 speedy 
+    reculer 90 speedy 
+  ]
+  
+  if head = 180
+  [
+    reculer 90 speedy 
+  ]
+  
+  if head = 225
+  [
+    tourneLeft 45 speedy 
+    reculer 90 speedy 
+  ]
+  
+  if head = 270
+  [
+    tourneRight 90 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 315
+  [
+    tourneRight 45 speedy 
+    avancer 90 speedy 
+  ]
+end
+
+to changePatchAnim_10 [ x y speedy ] ; ok
+;  print "(-1, 0)"
+  let diffangle angleRotationPatch heading 1 0
+  let head heading
+  ;print (list "head" head)
+  if head = 0
+  [
+    tourneRight 90 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 45
+  [
+    tourneLeft 45 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 90
+  [
+    ;tourneLeft 90 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 135
+  [
+    tourneLeft 45 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 180
+  [
+    tourneLeft 90 speedy 
+    avancer 90 speedy 
+  ]
+  
+  if head = 225
+  [
+    tourneRight 45 speedy 
+    reculer 90 speedy 
+  ]
+  
+  if head = 270
+  [
+    reculer 90 speedy 
+  ]
+  
+  if head = 315
+  [
+    tourneLeft 45 speedy 
+    reculer 90 speedy 
+  ]
+end
+
+to changePatchAnim_1_1 [ x y speedy ] ; ok
+;  print "(-1, -1)"
+  let diffangle angleRotationPatch heading -1 -1
+  let head heading
+;  print (list "head" head)
+  if head = 0
+  [
+    tourneRight 45 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 45
+  [
+    avancer 125 speedy 
+  ]
+  
+  if head = 90
+  [
+    tourneLeft 45 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 135
+  [
+    tourneLeft 90 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 180
+  [
+    tourneRight 45 speedy 
+    reculer 125 speedy 
+  ]
+  
+  if head = 225
+  [
+    reculer 125 speedy 
+  ]
+  
+  if head = 270
+  [
+    tourneLeft 45 speedy 
+    reculer 125 speedy 
+  ]
+  
+  if head = 315
+  [
+    tourneRight 90 speedy 
+    avancer 125 speedy 
+  ]
+end
+
+to changePatchAnim_11 [ x y speedy ]
+;  print "(-1, 1)"
+  let diffangle angleRotationPatch heading -1 1
+  let head heading
+ ; print (list "head" head)
+  if head = 0
+  [
+    tourneLeft 45 speedy 
+    reculer 125 speedy 
+  ]
+  
+  if head = 45
+  [
+    tourneRight 90 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 90
+  [
+    tourneRight 45 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 135
+  [
+    avancer 125 speedy 
+  ]
+  
+  if head = 180
+  [
+    tourneLeft 45 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 225
+  [
+    tourneLeft 90 speedy 
+    avancer 125 speedy 
+  ]
+  
+  if head = 270
+  [
+    tourneRight 45 speedy 
+    reculer 125 speedy 
+  ]
+  
+  if head = 315
+  [
+    reculer 125 speedy 
+  ]
+end
+
+;;Fonctions pour tourner
+to tourneRight [ diffAngle speedy ]
+  let i 0
+  set speedy 0.001
+  while [ i < abs( diffAngle) ]
+  [
+   
+   wait speedy
+   rt 1
+   forward 1 / (90 * 9)
+    
+   set i i + 1 
+  ] 
+end
+
+to tourneLeft [ diffAngle speedy ]
+  let i 0
+  set speedy 0.001
+  while [ i < abs( diffAngle) ]
+  [
+   
+   wait speedy
+   lt 1
+   forward 1 / (90 * 9)
+    
+   set i i + 1 
+  ] 
+end
+
+to avancer [ dist speedy ]
+  set speedy 0.001
+  let i 1
+  while [ i < dist ]
+  [
+    wait speedy
+    forward 1 / 90
+    set i i + 1
+  ]
+end
+
+to reculer [ dist speedy ]
+  set speedy 0.001
+  let i 1
+  while [ i < dist ]
+  [
+    wait speedy
+    forward -1 / 90
+    set i i + 1
+  ]
+end
+
+;;Connaitre les positions pour le bon rajustement
+to reajusteHeading 
+  let head heading
+  
+  if -1 < head and head < 1
+  [
+    set heading 0
+  ]
+  
+   if 44 < head and head < 46
+  [
+    set heading 45
+  ]
+  
+   if 89 < head and head < 91
+  [
+    set heading 90
+  ]
+  
+   if 134 < head and head < 136
+  [
+    set heading 135
+  ]
+  
+   if 179 < head and head < 181
+  [
+    set heading 180
+  ]
+  
+   if 224 < head  and head < 226
+  [
+    set heading 225
+  ]
+  
+   if 269 < head  and head < 271
+  [
+    set heading 270
+  ]
+  
+   if 314 < head  and head < 316
+  [
+    set heading 315
+  ]
+  
+end
+
+;;;Reajuster la liste pour une bonne animation
+to reajustePosition [ speedy ]
+  let xaux round xcor - xcor
+  let yaux round ycor - ycor
+  let zaux round zcor - zcor
+  
+  let i 0
+  while [ i < 90 ]
+  [
+   set xcor xcor + ( xaux / 90)
+   set ycor ycor + ( yaux / 90)
+   set zcor zcor + ( zaux / 90)
+   set i i + 1 
+  ]
+end
+  
+   

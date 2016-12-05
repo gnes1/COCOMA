@@ -1,0 +1,28 @@
+to receptionMessageEnnemi
+  if length(boiteAlettre ) > 0
+  [
+let m first(boiteALettre)
+  set boiteAlettre but-first(boiteALettre)
+
+  let typeMessage item 0 m
+  if typeMessage = 0
+  [ print "Accuser de reception" ]
+  if typeMessage = 1
+  [ print "Message"
+     if item 1 m = "Demande de renfort Ennemi"
+     [
+       if length (listeConvoiAPorteePerception) = 0  or length (listeDroneAPorteePerception) = 0 [
+          AvanceVersObjectifEnnemi item 2 m
+       ]
+     ]
+    
+    if aPorteeCommunication item 2 m  ; expéditeur
+    [ envoyerMessage 0 item 1 m  item 4 m "" false]
+  ]
+  ]
+end
+
+;;;;Envoyer les cordonnées du convoi lors de l'attaque par un ennemi
+to envoieDemandeRenfortEnnemi [destinataire message]
+  envoyerMessage 1 "Demande de renfort Ennemi" destinataire message true
+end

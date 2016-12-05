@@ -1,0 +1,134 @@
+to AvanceVersObjectifEnnemi [ posFinal ] 
+    let liste PlusCoursCheminFinal  ListeAdj round xcor round ycor round zcor item 0 posFinal item 1 posFinal item 2 posFinal 
+    suivrePath liste 0.001
+end
+
+to EnnemiAttaqueDrone
+  let x 0
+  let y 0
+  let z 0
+  let cible item random length (listeDroneAPorteeDeTir) listeDroneAPorteeDeTir
+ 
+  let pos -1
+  ask turtle cible[ set pos (list xcor ycor zcor) set x xcor set y ycor set z zcor]
+  let head DetermineHeading  x y  
+
+  if head != false [
+     if xcor = [xcor] of turtle cible and ycor = [ycor] of turtle cible [
+   set head heading 
+  ]
+  let pitching DeterminePitching x y z
+ 
+  Attaquer head pitching 10
+   
+  ]
+end
+
+
+to EnnemiAttaqueConvoi
+  let x 0
+  let y 0
+  let z 0
+  
+  if length(listeConvoiAPorteeDeTir) > 0
+  [
+    let cible item random length (listeConvoiAPorteeDeTir) listeConvoiAPorteeDeTir
+    let pos -1
+    ask turtle cible [ set pos (list xcor ycor zcor) set x xcor set y ycor set z zcor ]
+    let head DetermineHeading x y 
+    if xcor = [xcor] of turtle cible and ycor = [ycor] of turtle cible [
+      set head heading 
+    ]
+    if head != false
+    [
+      Attaquer head 0 10 
+    ]
+  ]
+end
+
+to SacrificeEnnemi
+  let liste [] 
+  if length(listeDroneAPorteePerception) > 0 
+  [
+    let randomchoice random length(listeDroneAPorteePerception)
+    ask turtle item randomchoice listeDroneAPorteePerception [
+      let ye ycor - 1 
+      set liste (list xcor ye zcor)
+    ]
+    
+    set liste PlusCoursCheminFinal ListeAdj round xcor round ycor round zcor item 0 liste item 1 liste item 2 liste
+    suivrePath liste 0.001
+  ]
+end
+
+to AppelRenfortEnnemi
+  envoieDemandeRenfortEnnemi  listeEnnemiAPorteeCommunication (list xcor ycor zcor)
+end
+
+to DeplacementRandomZoneEnnemi 
+  
+  let liste PathAleatoireLimitee round xcor round ycor round zcor 10 5 false
+  suivrePath liste 0.001
+end
+
+to TirAPortee
+  ifelse length(listeDroneAPorteePerception) > 0 [
+    EnnemiAttaqueDrone
+  ]
+  [
+    if length(listeConvoiAPorteePerception) > 0 [
+     
+      EnnemiAttaqueConvoi
+    ]
+  ]
+end
+
+
+to  playPlanEnnemi [action]
+  if action = "AvanceRandom" ;ok
+  [
+   
+    DeplacementRandomZoneEnnemi
+  ]
+  if action = "TirAPortee"
+  [
+    TirAPortee
+  ]
+  if action = "SeSacrifier" ; 
+  [
+    SacrificeEnnemi
+  ]
+  if action =  "Arrete" ;ok
+  [
+    Sarreter 1
+  ]
+  if action =  "AttaqueDrone";ok
+  [
+    EnnemiAttaqueDrone
+  ]
+  if action = "AttaqueConvoi" ;ok
+  [
+    EnnemiAttaqueConvoi
+  ]
+  if action = "DemandeRenfort" ; ok
+  [
+    AppelRenfortEnnemi
+  ]
+  if action = "AllezObjectif" ;ok
+  [
+    AvanceVersObjectifEnnemi (list 11 6 1 )
+  ]
+   if action = "LireMessage" ;ok
+  [
+    LireMessage 1
+  ]
+ if action = "MiseAJourCarteSolo"
+  [
+    MiseAjourCarteSoloEnnemi
+  ]
+  
+end
+
+to MiseAjourCarteSoloEnnemi
+  AgentDansCercleV2 xcor ycor zcor "Ennemi" true 
+end

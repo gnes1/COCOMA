@@ -1,0 +1,548 @@
+to-report mainDrone
+  let liste []
+  let etatvisite -1 
+    
+  ifelse  essenceActuel < ConvoiSeuilEssence 
+    [
+      ; e1  
+      print (list who "dronee1")
+      set liste Evale1Drone
+      set etatvisite 1
+    ]
+    [
+      ifelse length(listeEnnemiAPorteePerception) > 0 
+      [
+        ;e3 
+        print (list who "dronee3")
+        set liste  Evale3Drone
+        set etatvisite 3
+      ] 
+      [
+        ;e4 
+        print (list who "dronee4")
+        set liste  Evale4Drone
+        set etatvisite 4
+      ]
+    ]
+      report liste
+end  
+    
+to-report UtiliteE1Drone  [ action ]
+; set liste lput CalculeTuplee1RavitaillementDrone liste
+;   set liste lput CalculeTuplee1AppelDetresseDrone liste 
+;   set liste lput CalculeTuplee1LireMessageDrone liste
+;   set liste lput CalculeTuplee1ArreteDrone liste
+;   set liste lput CalculeTuplee1AllezObjectifDrone liste
+;   set liste lput CalculeTuplee1AttaqueEnnemiDrone liste 
+  if action = "Ravitaillement" ; ok
+  [
+   report UtilitéE1Ravitaillement
+  ]
+    if action =  "AppelDetresseRessource"; ok
+  [
+ report   UtilitéE1AppelDetresseRessource
+  ]
+  if action = "LireMessage" ; ok
+  [
+   report UtilitéE1LireMessage
+  ]
+  if action = "Arrete";ok
+  [
+    report UtilitéE1Arrete
+  ]
+  if action =  "AllezObjectif"; J'ai rajouté la variable leader pour drone;; A modifier, les leaders pour avoir une liste de suiveurs 
+  [
+    report UtilitéE1AllezObjectif
+  ]
+  if action = "AttaqueEnnemi"; ok
+  [
+    report UtilitéE1AttaqueEnnemi
+  ]
+end    
+   to-report UtilitéE1Ravitaillement
+      if distanceManhattan (list xcor ycor zcor) ( list 5 10 1) <=  essenceActuel [
+    report 10
+  ]
+    report 6 
+end
+   to-report UtilitéE1AppelDetresseRessource
+     if length(listeDroneAPorteeCommunication) > 1 [
+       report 7
+     ]
+     report 0 
+end
+   to-report UtilitéE1LireMessage
+     if length(boiteALettre) > 10 [
+       report 7
+     ]
+     if length(boiteALettre) > 5 [
+       report 5 
+     ]
+     report 0
+end 
+   to-report UtilitéE1Arrete
+     report random 10
+     end 
+   to-report UtilitéE1AllezObjectif
+     if essenceActuel > 0 and length(listeEnnemiAPorteePerception) > 0 [
+       report 10
+     ]
+     report 0
+end 
+   to-report UtilitéE1AttaqueEnnemi
+     if munitionActuel > 0 and length(listeEnnemiAPorteePerception) > 0 [
+      report 10 
+     ]
+     report 0
+end  
+    
+to-report UtiliteE3Drone  [ action ]
+; set liste lput CalculeTuplee3AttaqueEnnemiDrone liste
+;   set liste lput CalculeTuplee3EvitementDrone liste 
+;   set liste lput CalculeTuplee3DispersionDrone liste
+;   set liste lput CalculeTuplee3SuivreEnnemiDrone liste
+;   set liste lput CalculeTuplee3RegroupementDrone liste
+;   set liste lput CalculeTuplee3AllezObjectifDrone liste
+;   set liste lput CalculeTuplee3SacrifierDrone liste
+;   set liste lput CalculeTuplee3AppelRenfortDrone liste
+  if action =  "AllezObjectif"; J'ai rajouté la variable leader pour drone;; A modifier, les leaders pour avoir une liste de suiveurs 
+  [
+   report UtilitéE3AllezObjectif
+  ]
+  if action = "AttaqueEnnemi"; ok
+  [
+    report UtilitéE3AttaqueEnnemi
+  ]
+  if action = "Evitement" ; ok mais il ne trouve pas le point 
+  [
+    report UtilitéE3Evitement
+  ]
+  if action = "Dispersion"
+  [
+    report UtilitéE3Dispersion
+  ]
+  if action = "SuivreEnnemi" ; ok
+  [
+    report UtilitéE3SuivreEnnemi
+  ]
+if action = "Sacrifier" ; ok
+  [
+    report UtilitéE3Sacrifier 
+  ]
+  if action = "AppelRenfort" ; ok
+  [
+    report UtilitéE3AppelRenfort
+  ]
+ 
+end      
+    
+     to-report UtilitéE3AllezObjectif
+      if essenceActuel > 0 and length(listeEnnemiAPorteePerception) > 0 [
+       report 10
+     ]
+     report 0
+end 
+    
+      to-report UtilitéE3AttaqueEnnemi
+     if munitionActuel > 0 and length(listeEnnemiAPorteePerception) > 0 [
+      report 10 
+     ]
+     report 0
+end 
+         to-report UtilitéE3Evitement
+        if munitionActuel < DroneSeuilBalle and length(listeEnnemiAPorteePerception) > 0 [
+          report 10
+        ]
+        report 0
+end 
+         to-report UtilitéE3Dispersion
+          if munitionActuel < DroneSeuilBalle and length(listeEnnemiAPorteePerception) > 0 [
+          report 10
+        ]  
+          report 0 
+end 
+    
+         to-report UtilitéE3SuivreEnnemi
+         if length(listeEnnemiAPorteePerception) > 0 [
+          report 10
+        ]
+         report 0
+end 
+    
+         to-report UtilitéE3Sacrifier
+          if munitionActuel = 0 and  length(listeEnnemiAPorteePerception) > 0  [
+            report 10
+          ]
+          report 0
+end 
+    
+         to-report UtilitéE3AppelRenfort
+           if length(listeEnnemiAPorteePerception) > 0 [
+             report 5
+           ]
+           report 0
+           
+end 
+       
+    to-report UtiliteE4Drone  [ action ]
+
+; set liste lput CalculeTuplee4LireMessageDrone liste
+;   set liste lput CalculeTuplee4PatrouilleDrone liste 
+;   set liste lput CalculeTuplee4ExploNonExplorerDrone liste
+;   set liste lput CalculeTuplee4ExploRandomDrone liste
+;   set liste lput CalculeTuplee4SuivreRiviereDrone liste
+;   set liste lput CalculeTuplee4SuivreConvoiDrone liste
+;   set liste lput CalculeTuplee4TransportRessourceDrone liste
+  if action = "LireMessage" ; ok
+  [
+  report UtilitéE4LireMessage
+  ]
+  if action = "Arrete";ok
+  [
+  report UtilitéE4Arrete
+  ]
+   if action = "Patrouille" ; ok C kevin 
+  [
+      report UtilitéE4Patrouille
+  ]
+     if action =  "ExploNonExplorer" ; ok Kevin
+  [
+      report UtilitéE4ExploNonExplorer
+  ]
+    if action =  "ExploRandom" ; ok 
+  [
+      report UtilitéE4ExploRandom
+  ]
+      if action =  "SuivreRiviere" ; SuivreRiviere
+  [
+      report UtilitéE4SuivreRiviere
+  ]  
+       if action =  "SuivreConvoi" ; ok
+  [
+      report UtilitéE4SuivreConvoi
+  ]
+       if action =  "TransportRessource"; ok
+  [
+      report UtilitéE4TransportRessource
+  ]
+    end
+to-report UtilitéE4LireMessage     
+    if length(boiteALettre) > 10 [
+       report 7
+     ]
+     if length(boiteALettre) > 5 [
+       report 5 
+     ]
+     report 0
+end 
+to-report UtilitéE4Arrete
+  report random 10 
+       
+end 
+to-report UtilitéE4Patrouille
+       if length(listeEnnemiAPorteePerception) = 0 and length(listeConvoiAPorteePerception) > 0[
+         report (random 3) + 5 
+       ]
+       report 0
+end 
+to-report UtilitéE4ExploNonExplorer
+        if length(listeEnnemiAPorteePerception) = 0 [
+         report (random 3) + 5
+       ]
+       report 0
+end 
+to-report UtilitéE4SuivreRiviere
+         if length(listeEnnemiAPorteePerception) = 0 [
+         report (random 3) + 5
+       ]
+       report 0
+end 
+to-report UtilitéE4SuivreConvoi
+         if length(listeEnnemiAPorteePerception) = 0 and length(listeConvoiAPorteePerception) > 0[
+         report 10
+       ]
+       report 0
+end 
+to-report UtilitéE4TransportRessource
+       if member? "TransportRessource" GetListeObjectif[
+         report 10
+       ]
+       report 0  
+end 
+to-report UtilitéE4ExploRandom
+       if length(listeEnnemiAPorteePerception) = 0 [
+         report (random 3) + 5
+       ]
+       report 0   
+end 
+    
+ to-report Evale1Drone
+   let liste []
+   set liste lput CalculeTuplee1RavitaillementDrone liste
+   set liste lput CalculeTuplee1AppelDetresseDrone liste 
+   set liste lput CalculeTuplee1LireMessageDrone liste
+   set liste lput CalculeTuplee1ArreteDrone liste
+   set liste lput CalculeTuplee1AllezObjectifDrone liste
+   set liste lput CalculeTuplee1AttaqueEnnemiDrone liste
+  report (list who "e1tuple"liste)
+ end  
+
+ to-report Evale3Drone
+   let liste []
+   set liste lput CalculeTuplee3AttaqueEnnemiDrone liste
+   set liste lput CalculeTuplee3EvitementDrone liste 
+   set liste lput CalculeTuplee3DispersionDrone liste
+   set liste lput CalculeTuplee3SuivreEnnemiDrone liste
+   set liste lput CalculeTuplee3AllezObjectifDrone liste
+   set liste lput CalculeTuplee3SacrifierDrone liste
+   set liste lput CalculeTuplee3AppelRenfortDrone liste
+    report (list who "e3tuple"liste)
+ end  
+
+ to-report Evale4Drone
+   let liste []
+   set liste lput CalculeTuplee4LireMessageDrone liste
+   set liste lput CalculeTuplee4PatrouilleDrone liste 
+   set liste lput CalculeTuplee4ExploNonExplorerDrone liste
+   set liste lput CalculeTuplee4ExploRandomDrone liste
+   set liste lput CalculeTuplee4SuivreRiviereDrone liste
+   set liste lput CalculeTuplee4SuivreConvoiDrone liste
+   set liste lput CalculeTuplee4TransportRessourceDrone liste
+    report (list who "e4tuple"liste)
+ end  
+
+
+to-report CalculeTuplee1RavitaillementDrone
+  let liste (list "Ravitaillement")
+  let aux (list random 10 distanceManhattan (list xcor ycor zcor) ( list 5 10 1))
+  if distanceManhattan (list xcor ycor zcor) ( list 5 10 1) < essenceActuel and length(listeEnnemiAPorteePerception) = 0
+  [
+    set aux (list UtiliteE1Drone item 0 liste  DroneDecision)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee1AppelDetresseDrone
+  let liste (list "AppelDetresse")
+  let aux (list random 10 0)
+  if essenceActuel = 0
+  [
+    set aux (list UtiliteE1Drone item 0 liste 0)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+
+
+to-report CalculeTuplee1LireMessageDrone
+ let liste (list "LireMessage")
+ let aux (list random 10 0)
+ if  appelDetresseEnvoyer and essenceActuel = 0
+  [
+    set aux (list UtiliteE1Drone item 0 liste  0)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee1ArreteDrone
+  let liste (list "Arrete")
+  let aux (list random 10 0)
+  if essenceActuel = 0
+  [
+    set aux (list UtiliteE1Drone item 0 liste  0)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee1AllezObjectifDrone
+ let liste (list "AllezObjectif")
+ let aux (list random 10 distanceManhattan (list xcor ycor zcor) patchObjectif)
+ if length(listeEnnemiAPorteePerception) != 0
+  [
+    set aux (list UtiliteE1Drone item 0 liste  DroneDecision)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee1AttaqueEnnemiDrone ; ressource choisit de manière arbitraire (changer si il tire plus de balle à chaque scan)
+  let liste (list "AttaqueEnnemi")
+  let aux (list random 10 1)
+  if length(listeEnnemiAPorteeDeTir) > 0
+  [
+    set aux (list UtiliteE1Drone item 0 liste  1)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee3AttaqueEnnemiDrone ; ressource choisit de manière arbitraire (changer si il tire plus de balle à chaque scan)
+  let liste (list "AttaqueEnnemi")
+  let aux (list random 10 1)
+  if length(listeEnnemiAPorteeDeTir) > 0
+  [
+    set aux (list UtiliteE3Drone item 0 liste 1)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee3EvitementDrone
+  let liste (list "Evitement")
+  let aux (list random 10  10)
+  if length(listeEnnemiAPorteePerception) > 0
+  [
+    set aux (list UtiliteE3Drone item 0 liste  DroneDecision)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee3DispersionDrone
+  let liste (list "Dispersion")
+  let aux (list random 10  10)
+  if length(listeEnnemiAPorteePerception) > 0
+  [
+    set aux (list UtiliteE3Drone item 0 liste  DroneDecision)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee3SuivreEnnemiDrone
+  let liste (list "SuivreEnnemi")
+  let aux (list random 10  10)
+  if length(listeEnnemiAPorteePerception) > 0
+  [
+    set aux (list UtiliteE3Drone item 0 liste  DroneDecision)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+;to-report CalculeTuplee3RegroupementDrone
+;  let liste (list "Regroupement")
+;  let aux (list random 10  10)
+;  if true
+;  [
+;    set aux (list random 10  10)
+;  ]
+;  set liste lput aux liste
+;  report liste
+;end
+
+to-report CalculeTuplee3AllezObjectifDrone
+  let liste (list "AllezObjectif")
+  let aux (list random 10 distanceManhattan (list xcor ycor zcor) patchObjectif)
+  if true
+  [
+    set aux (list UtiliteE3Drone item 0 liste DroneDecision)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee3SacrifierDrone
+  let liste (list "Sacrifier")
+  let aux (list random 10  10)
+  if length(listeEnnemiAPorteePerception) > 0
+  [
+    set aux (list UtiliteE3Drone item 0 liste  DroneDecision)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee3AppelRenfortDrone
+  let liste (list "AppelRenfort")
+  let aux (list random 10 0)
+  if length(listeEnnemiAPorteePerception) > 0
+  [
+    set aux (list UtiliteE3Drone item 0 liste  0)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee4LireMessageDrone
+  let liste (list "LireMessage")
+  let aux (list random 10 0)
+  if length(listeEnnemiAPorteePerception) = 0 and length(boiteALettre) > 0 
+  [
+    set aux (list UtiliteE4Drone item 0 liste  0)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee4PatrouilleDrone
+  let liste (list "Patrouille")
+  let aux (list random 10 10)
+  if length(listeEnnemiAPorteePerception) = 0
+  [
+    set aux (list UtiliteE4Drone item 0 liste  DroneDecision)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee4ExploNonExplorerDrone
+  let liste (list "ExploNonExplorer")
+  let aux (list random 10  10)
+  if length(listeEnnemiAPorteePerception) = 0
+  [
+    set aux (list UtiliteE4Drone item 0 liste  DroneDecision)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee4ExploRandomDrone
+  let liste (list "ExploRandom")
+  let aux (list random 10  10)
+  if length(listeEnnemiAPorteePerception) = 0
+  [
+    set aux (list UtiliteE4Drone item 0 liste  DroneDecision)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee4SuivreRiviereDrone
+  let liste (list "SuivreRiviere")
+  let aux (list random 10  10)
+  if length(listeEnnemiAPorteePerception) = 0
+  [
+    set aux (list UtiliteE4Drone item 0 liste  DroneDecision)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee4SuivreConvoiDrone
+  let liste (list "SuivreConvoi")
+  let aux (list random 10  10)
+  if length(listeConvoiAPorteePerception) > 0
+  [
+    set aux (list UtiliteE4Drone item 0 liste  DroneDecision)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+to-report CalculeTuplee4TransportRessourceDrone
+  let liste (list "TransportRessource")
+  let aux (list random 10 10)
+  if true
+  [
+    set aux (list UtiliteE4Drone item 0 liste  DroneDecision)
+  ]
+  set liste lput aux liste
+  report liste
+end
+
+
